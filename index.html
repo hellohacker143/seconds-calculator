@@ -702,41 +702,31 @@ Lays 50*6</textarea>
             updateCalculator();
         }
 
-        // Expand a shortcut typed at the start of a line.
-        // Examples: "kk" -> "medium pamper 80*1", "kk*3" -> "medium pamper 80*3".
-        // This keeps the product name visible while allowing quantities.
+        // Expand shortcuts such as kk, kk*3, or Kk into the saved product name and rate.
         function checkShortcutReplacements() {
             const cursorPos = editor.selectionStart;
-            const lines = editor.value.split('\\n');
+            const lines = editor.value.split('\n');
             let currentLineIndex = 0;
             let count = 0;
-
             for (let i = 0; i < lines.length; i++) {
                 count += lines[i].length + 1;
-                if (cursorPos < count || i === lines.length - 1) {
-                    currentLineIndex = i;
-                    break;
-                }
+                if (cursorPos <= count || i === lines.length - 1) { currentLineIndex = i; break; }
             }
-
-            const currentLine = lines[currentLineIndex];
+            const currentLine = lines[currentLineIndex].trim();
             for (const prod of products) {
                 if (!prod.shortcut) continue;
-                const escapedCode = prod.shortcut.trim().replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&');
-                const regex = new RegExp('^\\\\s*' + escapedCode + '(?:\\\\s*\\\\*\\\\s*(\\\\d+(?:\\\\.\\\\d+)?))?\\\\s*$', 'i');
+                const regex = new RegExp('^' + prod.shortcut.trim() + '(?:\\s*\\*\\s*(\\d+(?:\\.\\d+)?))?$', 'i');
                 const match = currentLine.match(regex);
-                if (match) {
-                    const quantity = match[1] || '1';
-                    const replacement = prod.name + ' ' + prod.price + '*' + quantity;
-                    if (replacement !== currentLine) {
-                        lines[currentLineIndex] = replacement;
-                        editor.value = lines.join('\\n');
-                        const prefixLength = lines.slice(0, currentLineIndex).join('\\n').length + (currentLineIndex > 0 ? 1 : 0);
-                        const newCursorPos = prefixLength + replacement.length;
-                        editor.selectionStart = editor.selectionEnd = newCursorPos;
-                    }
-                    break;
+                if (!match) continue;
+                const quantity = match[1] || '1';
+                const expanded = prod.name + ' ' + prod.price + '*' + quantity;
+                if (lines[currentLineIndex] !== expanded) {
+                    lines[currentLineIndex] = expanded;
+                    editor.value = lines.join('\n');
+                    const prefixLength = lines.slice(0, currentLineIndex).join('\n').length + (currentLineIndex > 0 ? 1 : 0);
+                    editor.selectionStart = editor.selectionEnd = prefixLength + expanded.length;
                 }
+                break;
             }
         }
 
