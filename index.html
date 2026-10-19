@@ -353,6 +353,33 @@
             display: block;
         }
 
+        /* Keyboard mode controls stay visible above the editor */
+        .keyboard-mode-bar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #eef3f7;
+            border-top: 1px solid #d9e2ec;
+        }
+
+        .keyboard-mode-button {
+            flex: 1;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #2d3748;
+            padding: 9px 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .keyboard-mode-button.active {
+            background: #0088cc;
+            color: #ffffff;
+            border-color: #0088cc;
+        }
+
         /* Bottom Status Footer */
         footer {
             background-color: #e2e8f0;
@@ -475,11 +502,15 @@ Lays 50*6</textarea>
         <div class="results-panel" id="resultsPanel"></div>
     </div>
 
+    <!-- Number and alphabet keyboard selector -->
+    <div class="keyboard-mode-bar" aria-label="Keyboard mode">
+        <button type="button" class="keyboard-mode-button" id="btn123" onclick="setKeyboardMode('123')">123 Number Keypad</button>
+        <button type="button" class="keyboard-mode-button" id="btnABC" onclick="setKeyboardMode('ABC')">ABC Alphabet</button>
+    </div>
+
     <!-- Footer Bar -->
     <footer>
         <div class="footer-left">
-            <span class="footer-btn" id="btn123" onclick="setKeyboardMode('123')">123</span>
-            <span class="footer-btn" id="btnABC" onclick="setKeyboardMode('ABC')">ABC</span>
             <i class="fa-solid fa-keyboard footer-btn" id="btnKey" onclick="toggleKeyboard()"></i>
         </div>
         <div class="footer-right" id="totalResult">
@@ -689,14 +720,12 @@ Lays 50*6</textarea>
 
         // Keyboard Modes
         function setKeyboardMode(mode) {
-            document.getElementById('btn123').classList.remove('active');
-            document.getElementById('btnABC').classList.remove('active');
+            document.getElementById('btn123').classList.toggle('active', mode === '123');
+            document.getElementById('btnABC').classList.toggle('active', mode === 'ABC');
 
             if (mode === '123') {
-                document.getElementById('btn123').classList.add('active');
                 editor.inputMode = 'decimal';
             } else {
-                document.getElementById('btnABC').classList.add('active');
                 editor.inputMode = 'text';
             }
             editor.focus();
