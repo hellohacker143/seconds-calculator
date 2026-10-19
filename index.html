@@ -702,38 +702,42 @@ Lays 50*6</textarea>
             updateCalculator();
         }
 
-        // Auto replacement for shortcuts
+        // Expand a shortcut typed at the start of a line.
+        // Examples: "kk" -> "medium pamper 80*1", "kk*3" -> "medium pamper 80*3".
+        // This keeps the product name visible while allowing quantities.
         function checkShortcutReplacements() {
             const cursorPos = editor.selectionStart;
-            const text = editor.value;
-            const lines = text.split('\n');
-
+            const lines = editor.value.split('\\n');
             let currentLineIndex = 0;
             let count = 0;
 
             for (let i = 0; i < lines.length; i++) {
                 count += lines[i].length + 1;
-                if (cursorPos < count) {
+                if (cursorPos < count || i === lines.length - 1) {
                     currentLineIndex = i;
                     break;
                 }
             }
 
-            let currentLine = lines[currentLineIndex];
-
-            products.forEach(prod => {
-                if (prod.shortcut) {
-                    const regex = new RegExp(`^${prod.shortcut.trim()}(\\s+|\$)$`, 'i');
-                    if (regex.test(currentLine.trim())) {
-                        const replacement = `${prod.name} ${prod.price}*`;
+            const currentLine = lines[currentLineIndex];
+            for (const prod of products) {
+                if (!prod.shortcut) continue;
+                const escapedCode = prod.shortcut.trim().replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&');
+                const regex = new RegExp('^\\\\s*' + escapedCode + '(?:\\\\s*\\\\*\\\\s*(\\\\d+(?:\\\\.\\\\d+)?))?\\\\s*$', 'i');
+                const match = currentLine.match(regex);
+                if (match) {
+                    const quantity = match[1] || '1';
+                    const replacement = prod.name + ' ' + prod.price + '*' + quantity;
+                    if (replacement !== currentLine) {
                         lines[currentLineIndex] = replacement;
-                        editor.value = lines.join('\n');
-
-                        const newCursorPos = lines.slice(0, currentLineIndex).join('\n').length + replacement.length + (currentLineIndex > 0 ? 1 : 0);
+                        editor.value = lines.join('\\n');
+                        const prefixLength = lines.slice(0, currentLineIndex).join('\\n').length + (currentLineIndex > 0 ? 1 : 0);
+                        const newCursorPos = prefixLength + replacement.length;
                         editor.selectionStart = editor.selectionEnd = newCursorPos;
                     }
+                    break;
                 }
-            });
+            }
         }
 
         // Toggle Keyboard Focus
