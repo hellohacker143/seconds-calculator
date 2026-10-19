@@ -353,6 +353,27 @@
             display: block;
         }
 
+        /* Total summary stays visible at the bottom */
+        .total-summary {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            color: #1a202c;
+            font-size: 20px;
+            font-weight: 700;
+            min-height: 48px;
+        }
+
+        .total-summary .total-label {
+            color: #4a5568;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
         /* Keyboard mode controls stay visible above the editor */
         .keyboard-mode-bar {
             display: flex;
@@ -500,6 +521,12 @@
         <textarea class="text-editor" id="calcEditor" placeholder="Type shortcuts like k, l, c..." spellcheck="false">Kings 219*5
 Lays 50*6</textarea>
         <div class="results-panel" id="resultsPanel"></div>
+    </div>
+
+    <!-- Always-visible grand total -->
+    <div class="total-summary" aria-live="polite">
+        <span class="total-label">GRAND TOTAL</span>
+        <span id="grandTotalDisplay">₹0</span>
     </div>
 
     <!-- Number and alphabet keyboard selector -->
@@ -770,7 +797,11 @@ Lays 50*6</textarea>
 
             lineNumbers.innerHTML = numbersHtml;
             resultsPanel.innerHTML = resultsHtml;
-            totalResult.innerText = 'Total: ' + grandTotal.toLocaleString('en-US');
+            totalResult.innerText = 'Total: ₹' + grandTotal.toLocaleString('en-US');
+            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+            if (grandTotalDisplay) {
+                grandTotalDisplay.innerText = '₹' + grandTotal.toLocaleString('en-US');
+            }
         }
 
         // Sync scroll
