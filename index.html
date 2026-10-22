@@ -66,6 +66,51 @@
             cursor: pointer;
         }
 
+        .print-bill-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border: 0;
+            border-radius: 7px;
+            background: #ffffff;
+            color: #0078b8;
+            padding: 9px 11px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .print-bill-button:active { transform: scale(.98); }
+
+        .product-suggestions {
+            display: none;
+            position: absolute;
+            z-index: 12;
+            top: 6px;
+            left: 42px;
+            right: 116px;
+            max-height: 210px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            box-shadow: 0 5px 18px rgba(0,0,0,.16);
+        }
+        .product-suggestions.visible { display: block; }
+        .suggestion-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px;
+            border-bottom: 1px solid #edf2f7;
+            color: #2d3748;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .suggestion-item:last-child { border-bottom: 0; }
+        .suggestion-item:active { background: #e6f6ff; }
+        .suggestion-item small { color: #0088cc; font-weight: 700; }
+
         /* Main Workspace Area */
         .editor-container {
             flex: 1;
@@ -510,7 +555,7 @@
         </div>
         <div class="header-right">
             <i class="fa-solid fa-plus" title="New Bill" onclick="createNewBill()"></i>
-            <i class="fa-solid fa-print" title="Print Bill" onclick="printBill()"></i>
+            <button class="print-bill-button" type="button" onclick="printBill()"><i class="fa-solid fa-print"></i> Print Bill</button>
             <i class="fa-solid fa-gear" title="Settings" onclick="toggleMenu()"></i>
         </div>
     </header>
@@ -518,7 +563,8 @@
     <!-- Main Workspace -->
     <div class="editor-container">
         <div class="line-numbers" id="lineNumbers">1</div>
-        <textarea class="text-editor" id="calcEditor" placeholder="Type product and quantity, e.g. Kings 219*5" spellcheck="false"></textarea>
+        <textarea class="text-editor" id="calcEditor" placeholder="Type shortcut (e.g. vm) or product and quantity, e.g. Kings 219*5" spellcheck="false"></textarea>
+        <div class="product-suggestions" id="productSuggestions" role="listbox" aria-label="Product suggestions"></div>
         <div class="results-panel" id="resultsPanel"></div>
     </div>
 
@@ -709,7 +755,20 @@
             updateCalculator();
         }
 
-        // Expand shortcuts such as kk, kk*3, or Kk into the saved product name and rate.
+        // Expand a shortcut when a quantity is entered, e.g. vm*2.
+        // A shortcut by itself (e.g. vm) stays visible so the user can choose a suggestion.
+        function checkShortcutReplacements() {
+            const cursorPos = editor.selectionStart;
+            const lines = editor.value.split('\n');
+            let currentLineIndex = 0, count = 0;
+            for (let i = 0; i < lines.length; i++) {
+                count += lines[i].length + 1;
+                if (cursorPos <= count || i === lines.length - 1) { currentLineIndex = i; break; }
+            }
+            const currentLine = lines[currentLineIndex].trim();
+            for (const prod of products) {
+                if (!prod.shortcut) continue;
+                const escaped = prod.shortcut.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\        // Expand shortcuts such as kk, kk*3, or Kk into the saved product name and rate.
         function checkShortcutReplacements() {
             const cursorPos = editor.selectionStart;
             const lines = editor.value.split('\n');
@@ -735,6 +794,221 @@
                 }
                 break;
             }
+        }');
+                const regex = new RegExp('^' + escaped + '\\s*\\*\\s*(\\d+(?:\\.\\d+)?)
+
+        // Toggle Keyboard Focus
+        function toggleKeyboard() {
+            if (document.activeElement === editor) {
+                editor.blur();
+            } else {
+                editor.focus();
+            }
+        }
+
+        // Keyboard Modes
+        function setKeyboardMode(mode) {
+            document.getElementById('btn123').classList.toggle('active', mode === '123');
+            document.getElementById('btnABC').classList.toggle('active', mode === 'ABC');
+
+            if (mode === '123') {
+                editor.inputMode = 'decimal';
+            } else {
+                editor.inputMode = 'text';
+            }
+            editor.focus();
+        }
+
+        // Calculator Logic
+        function updateCalculator() {
+            checkShortcutReplacements();
+
+            const lines = editor.value.split('\n');
+            let numbersHtml = '';
+            let resultsHtml = '';
+            let grandTotal = 0;
+
+            lines.forEach((line, index) => {
+                numbersHtml += (index + 1) + '<br>';
+
+                const mathMatch = line.match(/[\d\.\s\+\-\*\/\(\)]+/g);
+                let lineTotal = null;
+
+                if (mathMatch) {
+                    try {
+                        const expression = mathMatch.join('').trim();
+                        if (expression) {
+                            const evalResult = Function(`'use strict'; return (${expression})`)();
+                            if (typeof evalResult === 'number' && !isNaN(evalResult)) {
+                                lineTotal = evalResult;
+                                grandTotal += lineTotal;
+                            }
+                        }
+                    } catch (e) {
+                        lineTotal = null;
+                    }
+                }
+
+                if (lineTotal !== null) {
+                    resultsHtml += lineTotal.toLocaleString('en-US') + '<br>';
+                } else {
+                    resultsHtml += '<br>';
+                }
+            });
+
+            lineNumbers.innerHTML = numbersHtml;
+            resultsPanel.innerHTML = resultsHtml;
+            totalResult.innerText = 'Total: ₹' + grandTotal.toLocaleString('en-US');
+            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+            if (grandTotalDisplay) {
+                grandTotalDisplay.innerText = '₹' + grandTotal.toLocaleString('en-US');
+            }
+            renderProductSuggestions();
+        }
+
+        // Print a clean kirana-store receipt similar to the sample provided.
+        function printBill() {
+            const rows = [];
+            let subtotal = 0;
+            editor.value.split('\\n').forEach(line => {
+                const text = line.trim();
+                if (!text) return;
+                // Supports: "Sunflower Oil 500ml 78*2" and "Kings 219*5".
+                const match = text.match(/^(.*?)\\s+([0-9]+(?:\\.[0-9]+)?)\\s*\\*\\s*([0-9]+(?:\\.[0-9]+)?)\\s*$/);
+                if (!match) return;
+                const name = match[1].trim();
+                const rate = Number(match[2]);
+                const qty = Number(match[3]);
+                const amount = rate * qty;
+                subtotal += amount;
+                rows.push({ name, rate, qty, amount });
+            });
+            if (!rows.length) {
+                alert('Enter items in the format: Product Name Rate*Quantity (example: Kings 219*5)');
+                return;
+            }
+            const money = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const itemRows = rows.map((item, i) => `
+                <tr><td class="no">${i + 1}</td><td class="item">${escapeReceiptText(item.name)}</td>
+                <td class="qty">${item.qty}</td><td class="rate">${item.rate.toLocaleString('en-IN')}</td>
+                <td class="amount">${money(item.amount)}</td></tr>`).join('');
+            const win = window.open('', '_blank');
+            if (!win) { alert('Please allow pop-ups to print your bill.'); return; }
+            win.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>SAI KIRANA STORE - Bill</title><style>
+            *{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172b27;margin:0;padding:22px;font-weight:600}
+            .receipt{max-width:760px;margin:0 auto}h1{text-align:center;font-size:clamp(25px,5vw,42px);margin:12px 0 24px;font-weight:800}
+            .dash{border:0;border-top:4px dashed #172b27;margin:20px 0}table{width:100%;border-collapse:collapse;table-layout:auto}
+            th{text-align:left;font-size:clamp(12px,2.5vw,20px);padding:12px 4px;white-space:nowrap}
+            td{padding:14px 4px;font-size:clamp(12px,2.4vw,20px);vertical-align:top}
+            .no{width:7%}.item{width:43%;overflow-wrap:anywhere}.qty,.rate,.amount{text-align:right;white-space:nowrap}
+            .totals{font-size:clamp(18px,3.5vw,28px);line-height:2}.total-row{display:flex;justify-content:space-between;gap:12px}
+            .thanks{text-align:center;font-size:clamp(24px,4vw,38px);line-height:1.6;margin:30px 0}
+            .tagline{text-align:center;font-size:clamp(13px,2.5vw,22px);font-weight:500;margin:24px 0}
+            @page{size:auto;margin:8mm}@media print{body{padding:0}.receipt{max-width:none}}
+            </style></head><body><main class="receipt"><h1>SAI KIRANA STORE</h1><hr class="dash">
+            <table><thead><tr><th colspan="2">NO&nbsp;&nbsp; ITEM</th><th class="qty">QTY</th><th class="rate">RATE</th><th class="amount">AMOUNT</th></tr></thead>
+            <tbody>${itemRows}</tbody></table><hr class="dash">
+            <section class="totals"><div class="total-row"><span>SUBTOTAL</span><span>${money(subtotal)}</span></div>
+            <div class="total-row"><span>DISCOUNT</span><span>${money(0)}</span></div>
+            <div class="total-row"><strong>GRAND TOTAL</strong><strong>${money(subtotal)}</strong></div></section>
+            <hr class="dash"><div class="thanks">THANK YOU!<br>VISIT AGAIN</div><hr class="dash">
+            <div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div></main>
+            <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`);
+            win.document.close();
+        }
+
+        function escapeReceiptText(value) {
+            return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        // Sync scroll
+        editor.addEventListener('scroll', () => {
+            lineNumbers.scrollTop = editor.scrollTop;
+            resultsPanel.scrollTop = editor.scrollTop;
+        });
+
+        editor.addEventListener('input', updateCalculator);
+        editor.addEventListener('keyup', renderProductSuggestions);
+        editor.addEventListener('click', renderProductSuggestions);
+        editor.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                document.getElementById('productSuggestions').classList.remove('visible');
+            }
+            if (event.key === 'Enter' && document.getElementById('productSuggestions').classList.contains('visible')) {
+                const info = getCurrentShortcutQuery();
+                if (info) {
+                    const match = products.find(p => p.shortcut && p.shortcut.toLowerCase().startsWith(info.query));
+                    if (match) {
+                        event.preventDefault();
+                        chooseProductSuggestion(match, info.start, editor.selectionStart);
+                    }
+                }
+            }
+        });
+
+        // Initial setup
+        renderProductsTable();
+        setKeyboardMode('123');
+        updateCalculator();
+    </script>
+</body>
+</html>, 'i');
+                const match = currentLine.match(regex);
+                if (!match) continue;
+                const expanded = prod.name + ' ' + prod.price + '*' + match[1];
+                if (lines[currentLineIndex] !== expanded) {
+                    lines[currentLineIndex] = expanded;
+                    editor.value = lines.join('\n');
+                    const prefixLength = lines.slice(0, currentLineIndex).join('\n').length + (currentLineIndex > 0 ? 1 : 0);
+                    editor.selectionStart = editor.selectionEnd = prefixLength + expanded.length;
+                }
+                break;
+            }
+        }
+
+        function getCurrentShortcutQuery() {
+            const beforeCursor = editor.value.slice(0, editor.selectionStart);
+            const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+            const currentLinePrefix = beforeCursor.slice(lineStart);
+            const match = currentLinePrefix.match(/(?:^|\\s)([a-zA-Z0-9]{1,12})$/);
+            return match ? { query: match[1].toLowerCase(), start: editor.selectionStart - match[1].length } : null;
+        }
+
+        function renderProductSuggestions() {
+            const box = document.getElementById('productSuggestions');
+            const info = getCurrentShortcutQuery();
+            if (!box || !info || !info.query) {
+                box?.classList.remove('visible');
+                if (box) box.innerHTML = '';
+                return;
+            }
+            const matches = products.filter(p => p.shortcut && p.shortcut.toLowerCase().startsWith(info.query)).slice(0, 6);
+            if (!matches.length) {
+                box.classList.remove('visible');
+                box.innerHTML = '';
+                return;
+            }
+            box.innerHTML = matches.map((p, i) =>
+                '<div class="suggestion-item" role="option" data-index="' + i + '">' +
+                '<span>' + escapeReceiptText(p.name) + '</span><small>' + escapeReceiptText(p.shortcut.toUpperCase()) + ' · ₹' + Number(p.price).toLocaleString('en-IN') + '</small></div>'
+            ).join('');
+            box.querySelectorAll('.suggestion-item').forEach((el, i) => {
+                el.addEventListener('mousedown', e => e.preventDefault());
+                el.addEventListener('click', () => chooseProductSuggestion(matches[i], info.start, editor.selectionStart));
+            });
+            box.classList.add('visible');
+        }
+
+        function chooseProductSuggestion(product, start, end) {
+            const before = editor.value.slice(0, start);
+            const after = editor.value.slice(editor.selectionStart);
+            const insert = product.name + ' ' + product.price + '*';
+            editor.value = before + insert + after;
+            editor.selectionStart = editor.selectionEnd = before.length + insert.length;
+            document.getElementById('productSuggestions').classList.remove('visible');
+            updateCalculator();
+            editor.focus();
         }
 
         // Toggle Keyboard Focus
