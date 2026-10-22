@@ -939,4 +939,35 @@
             <div class="total-row"><strong>GRAND TOTAL</strong><strong>${money(subtotal)}</strong></div></section>
             <hr class="dash"><div class="thanks">THANK YOU!<br>VISIT AGAIN</div><hr class="dash">
             <div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div></main>
-            <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>
+            <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`);
+            win.document.close();
+        }
+
+        function escapeReceiptText(value) {
+            return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        // Sync scroll
+        editor.addEventListener('scroll', () => {
+            lineNumbers.scrollTop = editor.scrollTop;
+            resultsPanel.scrollTop = editor.scrollTop;
+        });
+
+        editor.addEventListener('input', updateCalculator);
+        editor.addEventListener('keyup', renderProductSuggestions);
+        editor.addEventListener('click', renderProductSuggestions);
+        editor.addEventListener('keydown', event => {
+            if (event.key === 'Escape') document.getElementById('productSuggestions').classList.remove('visible');
+            if (event.key === 'Enter' && document.getElementById('productSuggestions').classList.contains('visible')) {
+                const info = getCurrentShortcutQuery();
+                const match = info && products.find(p => p.shortcut && p.shortcut.toLowerCase().startsWith(info.query));
+                if (match) { event.preventDefault(); chooseProductSuggestion(match, info.start); }
+            }
+        });
+        // Initial setup
+        renderProductsTable();
+        setKeyboardMode('123');
+        updateCalculator();
+    </script>
+</body>
+</html>
