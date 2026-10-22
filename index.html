@@ -969,12 +969,15 @@
                 if (text) {
                     // First parse bill items such as "Vijaya Milk 1L 62*8".
                     // This avoids treating the "1" in "1L" as a separate math value.
+                    // Match the final RATE*QUANTITY portion, leaving any digits,
+                    // brackets or units inside the product name untouched.
+                    // Examples: "Vijaya Milk (1L) 62*6", "Milk 1L 62 * 2", "Kings 219*5".
                     const itemMatch = text.match(/^(.+?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
                     if (itemMatch) {
                         const rate = Number(itemMatch[2]);
                         const qty = Number(itemMatch[3]);
                         if (Number.isFinite(rate) && Number.isFinite(qty)) {
-                            lineTotal = rate * qty;
+                            lineTotal = Math.round((rate * qty + Number.EPSILON) * 100) / 100;
                         }
                     } else {
                         // Keep support for standalone calculator expressions like 245*1 + 500*1.
