@@ -963,27 +963,36 @@
 
             lines.forEach((line, index) => {
                 numbersHtml += (index + 1) + '<br>';
-
-                const mathMatch = line.match(/[\d\.\s\+\-\*\/\(\)]+/g);
+                const text = line.trim();
                 let lineTotal = null;
 
-                if (mathMatch) {
-                    try {
-                        const expression = mathMatch.join('').trim();
-                        if (expression) {
-                            const evalResult = Function(`'use strict'; return (${expression})`)();
-                            if (typeof evalResult === 'number' && !isNaN(evalResult)) {
-                                lineTotal = evalResult;
-                                grandTotal += lineTotal;
+                if (text) {
+                    // First parse bill items such as "Vijaya Milk 1L 62*8".
+                    // This avoids treating the "1" in "1L" as a separate math value.
+                    const itemMatch = text.match(/^(.+?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
+                    if (itemMatch) {
+                        const rate = Number(itemMatch[2]);
+                        const qty = Number(itemMatch[3]);
+                        if (Number.isFinite(rate) && Number.isFinite(qty)) {
+                            lineTotal = rate * qty;
+                        }
+                    } else {
+                        // Keep support for standalone calculator expressions like 245*1 + 500*1.
+                        const expressionMatch = text.match(/^[\d.\s()+\-*/]+$/);
+                        if (expressionMatch) {
+                            try {
+                                const value = Function("'use strict'; return (" + text + ")")();
+                                if (typeof value === 'number' && Number.isFinite(value)) lineTotal = value;
+                            } catch (_) {
+                                lineTotal = null;
                             }
                         }
-                    } catch (e) {
-                        lineTotal = null;
                     }
                 }
 
                 if (lineTotal !== null) {
-                    resultsHtml += lineTotal.toLocaleString('en-US') + '<br>';
+                    grandTotal += lineTotal;
+                    resultsHtml += lineTotal.toLocaleString('en-IN') + '<br>';
                 } else {
                     resultsHtml += '<br>';
                 }
@@ -991,11 +1000,9 @@
 
             lineNumbers.innerHTML = numbersHtml;
             resultsPanel.innerHTML = resultsHtml;
-            totalResult.innerText = 'Total: ₹' + grandTotal.toLocaleString('en-US');
+            totalResult.innerText = 'Total: ₹' + grandTotal.toLocaleString('en-IN');
             const grandTotalDisplay = document.getElementById('grandTotalDisplay');
-            if (grandTotalDisplay) {
-                grandTotalDisplay.innerText = '₹' + grandTotal.toLocaleString('en-US');
-            }
+            if (grandTotalDisplay) grandTotalDisplay.innerText = '₹' + grandTotal.toLocaleString('en-IN');
             renderProductSuggestions();
         }
 
