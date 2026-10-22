@@ -1030,7 +1030,6 @@
             editor.value.split('\n').forEach(line => {
                 const text = line.trim();
                 if (!text) return;
-                // Supports: "Sunflower Oil 500ml 78*2" and "Kings 219*5".
                 const match = text.match(/^(.*?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
                 if (!match) return;
                 const name = match[1].trim();
@@ -1041,47 +1040,54 @@
                 rows.push({ name, rate, qty, amount });
             });
             if (!rows.length) {
-                alert('Enter items in the format: Product Name Rate*Quantity (example: Kings 219*5)');
+                alert('Add products first, for example: Kings 219*5');
                 return;
             }
+
             const money = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const itemRows = rows.map((item, i) => `
                 <tr><td class="no">${i + 1}</td><td class="item">${escapeReceiptText(item.name)}</td>
                 <td class="qty">${item.qty}</td><td class="rate">${item.rate.toLocaleString('en-IN')}</td>
                 <td class="amount">${money(item.amount)}</td></tr>`).join('');
-            const win = window.open('', '_blank');
-            if (!win) { alert('Please allow pop-ups to print your bill.'); return; }
-            win.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+
+            // Use the SAME tab: many in-app browsers (including printer apps)
+            // block window.open() or fail to render the new print window.
+            const receiptHtml = `<!doctype html><html><head><meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
             <title>SAI KIRANA STORE - Bill</title><style>
             *{box-sizing:border-box}
-            html{width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-            body{font-family:Arial,Helvetica,sans-serif;color:#172b27;margin:0 auto;padding:clamp(8px,3vw,22px);font-weight:600;width:100%;max-width:760px;overflow-wrap:anywhere}
+            body{font-family:Arial,Helvetica,sans-serif;color:#172b27;margin:0 auto;padding:12px;font-weight:600;width:100%;max-width:760px}
             .receipt{width:100%;max-width:760px;margin:0 auto}
-            h1{text-align:center;font-size:clamp(20px,5vw,42px);line-height:1.2;margin:12px 0 18px;font-weight:800;overflow-wrap:anywhere}
+            .actions{display:flex;gap:10px;position:sticky;top:0;background:#fff;padding:8px 0 12px}
+            .actions button{flex:1;border:0;border-radius:8px;padding:12px 8px;font-size:15px;font-weight:700}
+            .back{background:#e8eef3;color:#172b27}.print{background:#078ac4;color:#fff}
+            h1{text-align:center;font-size:clamp(22px,5vw,40px);line-height:1.2;margin:12px 0 18px;overflow-wrap:anywhere}
             .dash{border:0;border-top:2px dashed #172b27;margin:12px 0}
             table{width:100%;border-collapse:collapse;table-layout:fixed}
-            th{text-align:left;font-size:clamp(9px,2.5vw,20px);padding:7px 2px;white-space:normal;overflow-wrap:anywhere}
-            td{padding:8px 2px;font-size:clamp(10px,2.4vw,20px);vertical-align:top;overflow-wrap:anywhere}
+            th{text-align:left;font-size:clamp(9px,2.4vw,18px);padding:7px 2px;overflow-wrap:anywhere}
+            td{padding:8px 2px;font-size:clamp(10px,2.3vw,18px);vertical-align:top;overflow-wrap:anywhere}
             .no{width:7%}.item{width:39%;overflow-wrap:anywhere}.qty{width:10%;text-align:right;white-space:nowrap}.rate{width:16%;text-align:right;white-space:nowrap}.amount{width:28%;text-align:right;white-space:nowrap}
-            .totals{font-size:clamp(14px,3.5vw,28px);line-height:1.8;margin:12px 0}
-            .total-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-            .total-row span:last-child,.total-row strong:last-child{white-space:nowrap;text-align:right}
-            .thanks{text-align:center;font-size:clamp(20px,4vw,38px);line-height:1.4;margin:20px 0}
-            .tagline{text-align:center;font-size:clamp(11px,2.5vw,22px);font-weight:500;margin:18px 0;overflow-wrap:anywhere}
-            @media(max-width:360px){body{padding:5px}.dash{margin:8px 0}th,td{padding:6px 1px;font-size:10px}.item{width:37%}.amount{width:30%}.totals{font-size:13px}}
+            .totals{font-size:clamp(14px,3.5vw,26px);line-height:1.8;margin:12px 0}.total-row{display:flex;justify-content:space-between;gap:10px}.total-row span:last-child,.total-row strong:last-child{white-space:nowrap;text-align:right}
+            .thanks{text-align:center;font-size:clamp(20px,4vw,36px);line-height:1.4;margin:20px 0}.tagline{text-align:center;font-size:clamp(11px,2.5vw,20px);font-weight:500;margin:18px 0;overflow-wrap:anywhere}
+            @media(max-width:360px){body{padding:5px}th,td{padding:6px 1px;font-size:10px}.totals{font-size:13px}}
             @page{size:auto;margin:3mm}
-            @media print{html,body{width:100%;margin:0;padding:0}body{max-width:none}.receipt{width:100%;max-width:none}h1{font-size:18pt;margin:4mm 0}th{font-size:8pt}td{font-size:8pt;padding:2mm 1mm}.dash{border-top-width:1px;margin:2mm 0}.totals{font-size:11pt;line-height:1.6}.thanks{font-size:16pt;margin:5mm 0}.tagline{font-size:9pt;margin:4mm 0}}
-            @media print and (max-width:70mm){body{padding:0}.item{width:38%}.qty{width:10%}.rate{width:17%}.amount{width:28%}th,td{font-size:8pt;padding:1.5mm .5mm}.totals{font-size:10pt}.thanks{font-size:14pt}}
-            </style></head><body><main class="receipt"><h1>SAI KIRANA STORE</h1><hr class="dash">
-            <table><thead><tr><th colspan="2">NO&nbsp;&nbsp; ITEM</th><th class="qty">QTY</th><th class="rate">RATE</th><th class="amount">AMOUNT</th></tr></thead>
-            <tbody>${itemRows}</tbody></table><hr class="dash">
+            @media print{body{max-width:none;padding:0}.actions{display:none}h1{font-size:18pt;margin:4mm 0}th{font-size:8pt}td{font-size:8pt;padding:2mm 1mm}.dash{margin:2mm 0}.totals{font-size:11pt;line-height:1.6}.thanks{font-size:16pt;margin:5mm 0}.tagline{font-size:9pt;margin:4mm 0}}
+            </style></head><body><main class="receipt">
+            <div class="actions"><button class="back" onclick="history.back()">← Back</button><button class="print" onclick="window.print()">🖨 Print Bill</button></div>
+            <h1>SAI KIRANA STORE</h1><hr class="dash">
+            <table><thead><tr><th colspan="2">NO&nbsp; ITEM</th><th class="qty">QTY</th><th class="rate">RATE</th><th class="amount">AMOUNT</th></tr></thead><tbody>${itemRows}</tbody></table><hr class="dash">
             <section class="totals"><div class="total-row"><span>SUBTOTAL</span><span>${money(subtotal)}</span></div>
             <div class="total-row"><span>DISCOUNT</span><span>${money(0)}</span></div>
             <div class="total-row"><strong>GRAND TOTAL</strong><strong>${money(subtotal)}</strong></div></section>
             <hr class="dash"><div class="thanks">THANK YOU!<br>VISIT AGAIN</div><hr class="dash">
-            <div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div></main>
-            <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`);
-            win.document.close();
+            <div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div></main></body></html>`;
+
+            try {
+                sessionStorage.setItem('saiKiranaLastBill', editor.value);
+            } catch (_) {}
+            document.open();
+            document.write(receiptHtml);
+            document.close();
         }
 
         function escapeReceiptText(value) {
