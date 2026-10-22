@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Kirana General Store Billing</title>
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -25,6 +25,46 @@
             border-right: 1px solid #e0e0e0;
             position: relative;
             overflow: hidden;
+        }
+
+        html { width: 100%; min-height: 100%; -webkit-text-size-adjust: 100%; }
+        body { width: 100%; min-width: 0; min-height: 100dvh; height: 100dvh; }
+        button, input, textarea { max-width: 100%; }
+        .editor-container { min-width: 0; width: 100%; flex: 1 1 auto; }
+        .text-editor { min-width: 0; width: 100%; }
+        .results-panel { min-width: 64px; }
+        header { width: 100%; min-width: 0; gap: 8px; padding: 10px 12px; }
+        .header-left { min-width: 0; flex: 1 1 auto; gap: 10px; }
+        .header-left h1 { min-width: 0; font-size: clamp(14px, 4vw, 19px); line-height: 1.2; overflow-wrap: anywhere; }
+        .header-right { min-width: 0; flex: 0 1 auto; gap: clamp(6px, 2vw, 14px); }
+        .header-right i { flex: 0 0 auto; }
+        .default-products-button, .print-bill-button { flex: 0 0 auto; }
+        .keyboard-mode-bar { width: 100%; display: flex; gap: 8px; padding: 8px; }
+        .keyboard-mode-button { min-width: 0; flex: 1 1 50%; white-space: normal; overflow-wrap: anywhere; }
+        .default-products-modal { position: fixed; inset: 0; padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+        .default-products-card { width: 100%; max-height: min(82dvh, 720px); overflow-y: auto; }
+        .default-products-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .total-summary { width: 100%; min-width: 0; gap: 8px; padding: 10px 12px; }
+        .total-label { min-width: 0; overflow-wrap: anywhere; }
+        #grandTotalDisplay { overflow-wrap: anywhere; }
+        footer { width: 100%; min-width: 0; }
+        @media (max-width: 420px) {
+            body { border-left: 0; border-right: 0; }
+            header { padding: 8px; gap: 6px; }
+            .header-left { gap: 7px; }
+            .header-left h1 { font-size: 13px; max-width: 88px; }
+            .header-right { gap: 6px; }
+            .header-right i { font-size: 16px; }
+            .default-products-button { padding: 8px 7px; font-size: 12px; }
+            .print-bill-button { padding: 8px 7px; font-size: 12px; gap: 4px; }
+            .total-summary { font-size: 14px; }
+        }
+        @media (max-width: 350px) {
+            .header-left h1 { display: none; }
+            .header-right { gap: 5px; }
+            .print-bill-button { font-size: 11px; }
+            .default-products-list { grid-template-columns: 1fr; }
+            .keyboard-mode-button { font-size: 12px; padding: 10px 5px; }
         }
 
         /* Header */
