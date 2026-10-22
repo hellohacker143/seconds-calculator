@@ -131,6 +131,39 @@
             background: rgba(15, 23, 42, .48); padding: 16px; align-items: center; justify-content: center;
         }
         .default-products-modal.open { display: flex; }
+
+        /* Mobile / Fun Printer in-app browser fix: keep the picker above the app header. */
+        .default-products-modal {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 99999 !important;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+            background: rgba(15, 23, 42, .58);
+        }
+        .default-products-modal.open { display: flex !important; }
+        .default-products-card {
+            position: relative;
+            z-index: 100000;
+            margin: 12px auto;
+            width: 100%;
+            max-width: 440px;
+            max-height: calc(100dvh - 48px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-bottom: max(14px, env(safe-area-inset-bottom));
+        }
+        .default-products-actions {
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
+            background: #fff;
+            padding: 10px 0 2px;
+        }
         .default-products-card {
             width: 100%; max-width: 440px; max-height: 82vh; overflow: auto; background: white;
             border-radius: 14px; padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.22);
@@ -1085,9 +1118,17 @@
             try {
                 sessionStorage.setItem('saiKiranaLastBill', editor.value);
             } catch (_) {}
-            document.open();
-            document.write(receiptHtml);
-            document.close();
+
+            // In printer-app browsers, avoid document.open()/document.write(), which can
+            // leave the embedded WebView showing a stale/blank page. Navigate to a receipt
+            // document in the current tab instead, so the app's own print control can act on it.
+            try {
+                const receiptBlob = new Blob([receiptHtml], { type: 'text/html;charset=utf-8' });
+                const receiptUrl = URL.createObjectURL(receiptBlob);
+                window.location.assign(receiptUrl);
+            } catch (error) {
+                alert('Could not open the receipt in this printer browser. Open this page in Chrome and use Print Bill.');
+            }
         }
 
         function escapeReceiptText(value) {
