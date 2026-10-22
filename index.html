@@ -139,10 +139,15 @@
         .default-products-heading button { border:0; background:transparent; font-size:28px; cursor:pointer; }
         .default-products-help { font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.4; }
         .default-products-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-        .default-product { display:grid; grid-template-columns:1fr auto; text-align:left; gap:5px; padding:11px 10px; border:1px solid #dbe5ee; border-radius:9px; background:#f8fbfd; color:#1f2937; cursor:pointer; }
+        .default-product { display:grid; grid-template-columns:20px minmax(0,1fr) auto; align-items:center; text-align:left; gap:7px; padding:11px 9px; border:1px solid #dbe5ee; border-radius:9px; background:#f8fbfd; color:#1f2937; cursor:pointer; }
+        .default-product-check { width:18px; height:18px; accent-color:#0088cc; }
         .default-product span { font-size:14px; font-weight:700; overflow-wrap:anywhere; }
         .default-product strong { font-size:14px; color:#0078b8; }
-        .default-product small { grid-column:1 / -1; color:#64748b; font-size:11px; }
+        .default-product small { grid-column:2 / -1; color:#64748b; font-size:11px; }
+        .default-products-actions { display:flex; gap:10px; margin-top:14px; position:sticky; bottom:0; background:#fff; padding-top:8px; }
+        .default-products-actions button { flex:1; border:0; border-radius:8px; padding:12px 10px; font-weight:800; cursor:pointer; }
+        .select-all-defaults { background:#eef2f7; color:#334155; }
+        .add-selected-defaults { background:#0088cc; color:white; }
         @media (max-width:390px) { .header-right { gap:8px; } .default-products-button { padding:8px 7px; } .print-bill-button { padding:8px 7px; font-size:12px; } }
 
         .product-suggestions {
@@ -627,8 +632,12 @@
     <div class="default-products-modal" id="defaultProductsModal" aria-modal="true" role="dialog" aria-label="Default products">
         <div class="default-products-card">
             <div class="default-products-heading"><strong>Default Products</strong><button type="button" onclick="closeDefaultProducts()" aria-label="Close">×</button></div>
-            <p class="default-products-help">Tap a product to add one item to the bill. Change quantity in the bill text.</p>
+            <p class="default-products-help">Select the products you want to add. You can uncheck any item, then tap Add Selected.</p>
             <div class="default-products-list" id="defaultProductsList"></div>
+            <div class="default-products-actions">
+                <button type="button" class="select-all-defaults" onclick="document.querySelectorAll('.default-product-check').forEach(x => x.checked = true)">Select All</button>
+                <button type="button" class="add-selected-defaults" onclick="addSelectedDefaultProductsToBill()">Add Selected</button>
+            </div>
         </div>
     </div>
 
@@ -703,27 +712,32 @@
         let products = defaultProducts.map(product => ({ ...product }));
 
         function showDefaultProducts() {
-            const names = defaultProducts.map(p =>
-                '<button type="button" class="default-product" onclick="addDefaultProductToBill(\'' +
-                p.shortcut + '\')"><span>' + escapeReceiptText(p.name) +
+            const names = defaultProducts.map((p, i) =>
+                '<label class="default-product"><input type="checkbox" class="default-product-check" value="' +
+                escapeReceiptText(p.shortcut) + '" checked><span>' + escapeReceiptText(p.name) +
                 '</span><strong>₹' + Number(p.price).toLocaleString('en-IN') +
-                '</strong><small>' + escapeReceiptText(p.shortcut.toUpperCase()) + '</small></button>'
+                '</strong><small>' + escapeReceiptText(p.shortcut.toUpperCase()) + '</small></label>'
             ).join('');
-            const modal = document.getElementById('defaultProductsModal');
             document.getElementById('defaultProductsList').innerHTML = names;
-            modal.classList.add('open');
+            document.getElementById('defaultProductsModal').classList.add('open');
         }
 
         function closeDefaultProducts() {
             document.getElementById('defaultProductsModal').classList.remove('open');
         }
 
-        function addDefaultProductToBill(shortcut) {
-            const product = products.find(p => p.shortcut.toLowerCase() === shortcut.toLowerCase());
-            if (!product) return;
+        function addSelectedDefaultProductsToBill() {
+            const selected = Array.from(document.querySelectorAll('.default-product-check:checked'))
+                .map(input => products.find(p => p.shortcut.toLowerCase() === input.value.toLowerCase()))
+                .filter(Boolean);
+            if (!selected.length) {
+                alert('Please select at least one product.');
+                return;
+            }
+
             const current = editor.value.trimEnd();
-            const line = product.name + ' ' + product.price + '*1';
-            editor.value = current ? current + '\\n' + line : line;
+            const newLines = selected.map(product => product.name + ' ' + product.price + '*1');
+            editor.value = current ? current + '\n' + newLines.join('\n') : newLines.join('\n');
             editor.selectionStart = editor.selectionEnd = editor.value.length;
             closeDefaultProducts();
             updateCalculator();
