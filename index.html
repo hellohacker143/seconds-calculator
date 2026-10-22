@@ -757,6 +757,7 @@
 
         // Expand a shortcut when a quantity is entered, e.g. vm*2.
         // A shortcut by itself (e.g. vm) stays visible so the user can choose a suggestion.
+        // Shortcut autocomplete and expansion
         function checkShortcutReplacements() {
             const cursorPos = editor.selectionStart;
             const lines = editor.value.split('\n');
@@ -768,21 +769,7 @@
             const currentLine = lines[currentLineIndex].trim();
             for (const prod of products) {
                 if (!prod.shortcut) continue;
-                const escaped = prod.shortcut.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\        // Expand a shortcut when a quantity is entered, e.g. vm*2.
-        // A shortcut alone (vm) stays available as a selectable suggestion.
-        function checkShortcutReplacements() {
-            const cursorPos = editor.selectionStart;
-            const lines = editor.value.split('\n');
-            let currentLineIndex = 0, count = 0;
-            for (let i = 0; i < lines.length; i++) {
-                count += lines[i].length + 1;
-                if (cursorPos <= count || i === lines.length - 1) { currentLineIndex = i; break; }
-            }
-            const currentLine = lines[currentLineIndex].trim();
-            for (const prod of products) {
-                if (!prod.shortcut) continue;
-                const regex = new RegExp('^' + prod.shortcut.trim() + '\\s*\\*\\s*(\\d+(?:\\.\\d+)?)$', 'i');
-                const match = currentLine.match(regex);
+                const match = currentLine.match(new RegExp('^' + prod.shortcut.trim() + '\\s*\\*\\s*(\\d+(?:\\.\\d+)?)$', 'i'));
                 if (!match) continue;
                 const expanded = prod.name + ' ' + prod.price + '*' + match[1];
                 if (lines[currentLineIndex] !== expanded) {
@@ -806,10 +793,17 @@
         function renderProductSuggestions() {
             const box = document.getElementById('productSuggestions');
             const info = getCurrentShortcutQuery();
-            if (!box || !info || !info.query) { if (box) { box.classList.remove('visible'); box.innerHTML = ''; } return; }
+            if (!box || !info || !info.query) {
+                if (box) { box.classList.remove('visible'); box.innerHTML = ''; }
+                return;
+            }
             const matches = products.filter(p => p.shortcut && p.shortcut.toLowerCase().startsWith(info.query)).slice(0, 6);
             if (!matches.length) { box.classList.remove('visible'); box.innerHTML = ''; return; }
-            box.innerHTML = matches.map((p, i) => '<div class="suggestion-item" role="option" data-index="' + i + '"><span>' + escapeReceiptText(p.name) + '</span><small>' + escapeReceiptText(p.shortcut.toUpperCase()) + ' · ₹' + Number(p.price).toLocaleString('en-IN') + '</small></div>').join('');
+            box.innerHTML = matches.map(p =>
+                '<div class="suggestion-item" role="option"><span>' + escapeReceiptText(p.name) +
+                '</span><small>' + escapeReceiptText(p.shortcut.toUpperCase()) + ' · ₹' +
+                Number(p.price).toLocaleString('en-IN') + '</small></div>'
+            ).join('');
             box.querySelectorAll('.suggestion-item').forEach((el, i) => {
                 el.addEventListener('mousedown', e => e.preventDefault());
                 el.addEventListener('click', () => chooseProductSuggestion(matches[i], info.start));
@@ -820,13 +814,14 @@
         function chooseProductSuggestion(product, start) {
             const before = editor.value.slice(0, start);
             const after = editor.value.slice(editor.selectionStart);
-            const insert = product.name + ' ' + product.price + '*';
-            editor.value = before + insert + after;
-            editor.selectionStart = editor.selectionEnd = before.length + insert.length;
+            const insertion = product.name + ' ' + product.price + '*';
+            editor.value = before + insertion + after;
+            editor.selectionStart = editor.selectionEnd = before.length + insertion.length;
             document.getElementById('productSuggestions').classList.remove('visible');
             updateCalculator();
             editor.focus();
         }
+
         // Toggle Keyboard Focus
         function toggleKeyboard() {
             if (document.activeElement === editor) {
