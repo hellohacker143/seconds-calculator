@@ -27,6 +27,24 @@
             overflow: hidden;
         }
 
+        .thermal-print-receipt { display:none; }
+        /* Print in the current page: compatible with embedded printer browsers. */
+        @page { size:58mm auto; margin:0; }
+        @media print {
+          html,body{display:block!important;width:58mm!important;min-width:58mm!important;max-width:58mm!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;border:0!important;background:#fff!important;color:#000!important}
+          body>*:not(#thermalPrintReceipt){display:none!important}
+          #thermalPrintReceipt{display:block!important;width:58mm!important;max-width:58mm!important;margin:0!important;padding:2mm!important;background:#fff!important;color:#000!important;font:600 8pt Arial,Helvetica,sans-serif!important}
+          #thermalPrintReceipt *{box-sizing:border-box}
+          #thermalPrintReceipt h1{display:block!important;text-align:center!important;font-size:13pt!important;line-height:1.15!important;margin:2mm 0 3mm!important;color:#000!important;overflow-wrap:anywhere!important}
+          #thermalPrintReceipt .dash{border:0!important;border-top:1px dashed #000!important;margin:2mm 0!important}
+          #thermalPrintReceipt table{display:table!important;width:100%!important;table-layout:fixed!important;border-collapse:collapse!important}
+          #thermalPrintReceipt thead{display:table-header-group!important}#thermalPrintReceipt tbody{display:table-row-group!important}#thermalPrintReceipt tr{display:table-row!important;break-inside:avoid}
+          #thermalPrintReceipt th,#thermalPrintReceipt td{display:table-cell!important;color:#000!important;font-size:7.2pt!important;line-height:1.2!important;padding:1.2mm .4mm!important;border:0!important;vertical-align:top!important;overflow-wrap:anywhere!important}
+          #thermalPrintReceipt .no{width:7%!important}#thermalPrintReceipt .item{width:37%!important}#thermalPrintReceipt .qty{width:10%!important;text-align:right!important;white-space:nowrap!important}#thermalPrintReceipt .rate{width:17%!important;text-align:right!important;white-space:nowrap!important}#thermalPrintReceipt .amount{width:29%!important;text-align:right!important;white-space:nowrap!important}
+          #thermalPrintReceipt .totals{font-size:9pt!important;line-height:1.6!important;margin:2mm 0!important}#thermalPrintReceipt .total-row{display:flex!important;justify-content:space-between!important;gap:1mm!important}#thermalPrintReceipt .total-row span:last-child,#thermalPrintReceipt .total-row strong:last-child{white-space:nowrap!important;text-align:right!important}
+          #thermalPrintReceipt .thanks{display:block!important;text-align:center!important;font-size:12pt!important;line-height:1.35!important;margin:4mm 0!important}#thermalPrintReceipt .tagline{display:block!important;text-align:center!important;font-size:7pt!important;line-height:1.3!important;margin:3mm 0!important}
+        }
+
         html { width: 100%; min-height: 100%; -webkit-text-size-adjust: 100%; }
         body { width: 100%; min-width: 0; min-height: 100dvh; height: 100dvh; }
         button, input, textarea { max-width: 100%; }
@@ -1065,88 +1083,21 @@
                 if (!text) return;
                 const match = text.match(/^(.*?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
                 if (!match) return;
-                const name = match[1].trim();
-                const rate = Number(match[2]);
-                const qty = Number(match[3]);
-                const amount = rate * qty;
-                subtotal += amount;
+                const name = match[1].trim(), rate = Number(match[2]), qty = Number(match[3]);
+                const amount = rate * qty; subtotal += amount;
                 rows.push({ name, rate, qty, amount });
             });
-            if (!rows.length) {
-                alert('Add products first, for example: Kings 219*5');
-                return;
-            }
-
+            if (!rows.length) { alert('Add products first, for example: Kings 219*5'); return; }
             const money = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const itemRows = rows.map((item, i) => `
-                <tr><td class="no">${i + 1}</td><td class="item">${escapeReceiptText(item.name)}</td>
-                <td class="qty">${item.qty}</td><td class="rate">${item.rate.toLocaleString('en-IN')}</td>
-                <td class="amount">${money(item.amount)}</td></tr>`).join('');
-
-            // Use the SAME tab: many in-app browsers (including printer apps)
-            // block window.open() or fail to render the new print window.
-            const receiptHtml = `<!doctype html><html><head><meta charset="utf-8">
-            <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-            <title>SAI KIRANA STORE - Bill</title><style>
-            *{box-sizing:border-box}
-            body{font-family:Arial,Helvetica,sans-serif;color:#172b27;margin:0 auto;padding:12px;font-weight:600;width:100%;max-width:760px}
-            .receipt{width:100%;max-width:760px;margin:0 auto}
-            .actions{display:flex;gap:10px;position:sticky;top:0;background:#fff;padding:8px 0 12px}
-            .actions button{flex:1;border:0;border-radius:8px;padding:12px 8px;font-size:15px;font-weight:700}
-            .back{background:#e8eef3;color:#172b27}.print{background:#078ac4;color:#fff}
-            h1{text-align:center;font-size:clamp(22px,5vw,40px);line-height:1.2;margin:12px 0 18px;overflow-wrap:anywhere}
-            .dash{border:0;border-top:2px dashed #172b27;margin:12px 0}
-            table{width:100%;border-collapse:collapse;table-layout:fixed}
-            th{text-align:left;font-size:clamp(9px,2.4vw,18px);padding:7px 2px;overflow-wrap:anywhere}
-            td{padding:8px 2px;font-size:clamp(10px,2.3vw,18px);vertical-align:top;overflow-wrap:anywhere}
-            .no{width:7%}.item{width:39%;overflow-wrap:anywhere}.qty{width:10%;text-align:right;white-space:nowrap}.rate{width:16%;text-align:right;white-space:nowrap}.amount{width:28%;text-align:right;white-space:nowrap}
-            .totals{font-size:clamp(14px,3.5vw,26px);line-height:1.8;margin:12px 0}.total-row{display:flex;justify-content:space-between;gap:10px}.total-row span:last-child,.total-row strong:last-child{white-space:nowrap;text-align:right}
-            .thanks{text-align:center;font-size:clamp(20px,4vw,36px);line-height:1.4;margin:20px 0}.tagline{text-align:center;font-size:clamp(11px,2.5vw,20px);font-weight:500;margin:18px 0;overflow-wrap:anywhere}
-            @media(max-width:360px){body{padding:5px}th,td{padding:6px 1px;font-size:10px}.totals{font-size:13px}}
-            /* Fun Print / 58mm thermal paper */
-            @page{size:58mm auto;margin:0}
-            @media print{
-                html,body{width:58mm!important;min-width:58mm!important;max-width:58mm!important;margin:0!important;padding:0!important}
-                body{font-family:Arial,Helvetica,sans-serif;font-weight:600}
-                .receipt{width:58mm!important;max-width:58mm!important;margin:0!important;padding:2mm!important}
-                .actions{display:none!important}
-                h1{font-size:13pt;line-height:1.15;margin:2mm 0 3mm;overflow-wrap:anywhere}
-                .dash{border-top:1px dashed #172b27;margin:2mm 0}
-                table{width:100%;table-layout:fixed}
-                th{font-size:7pt;padding:1.2mm .4mm;white-space:normal}
-                td{font-size:7.5pt;padding:1.5mm .4mm;overflow-wrap:anywhere}
-                .no{width:7%}.item{width:37%;overflow-wrap:anywhere}.qty{width:10%;text-align:right;white-space:nowrap}.rate{width:17%;text-align:right;white-space:nowrap}.amount{width:29%;text-align:right;white-space:nowrap}
-                .totals{font-size:9pt;line-height:1.6;margin:2mm 0}
-                .total-row{gap:1mm}
-                .total-row span:last-child,.total-row strong:last-child{white-space:nowrap}
-                .thanks{font-size:12pt;line-height:1.35;margin:4mm 0}
-                .tagline{font-size:7pt;line-height:1.3;margin:3mm 0}
-                *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-            }
-            </style></head><body><main class="receipt">
-            <div class="actions"><button class="back" onclick="history.back()">← Back</button><button class="print" onclick="window.print()">🖨 Print Bill</button></div>
-            <h1>SAI KIRANA STORE</h1><hr class="dash">
-            <table><thead><tr><th colspan="2">NO&nbsp; ITEM</th><th class="qty">QTY</th><th class="rate">RATE</th><th class="amount">AMOUNT</th></tr></thead><tbody>${itemRows}</tbody></table><hr class="dash">
-            <section class="totals"><div class="total-row"><span>SUBTOTAL</span><span>${money(subtotal)}</span></div>
-            <div class="total-row"><span>DISCOUNT</span><span>${money(0)}</span></div>
-            <div class="total-row"><strong>GRAND TOTAL</strong><strong>${money(subtotal)}</strong></div></section>
-            <hr class="dash"><div class="thanks">THANK YOU!<br>VISIT AGAIN</div><hr class="dash">
-            <div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div></main></body></html>`;
-
-            try {
-                sessionStorage.setItem('saiKiranaLastBill', editor.value);
-            } catch (_) {}
-
-            // In printer-app browsers, avoid document.open()/document.write(), which can
-            // leave the embedded WebView showing a stale/blank page. Navigate to a receipt
-            // document in the current tab instead, so the app's own print control can act on it.
-            try {
-                const receiptBlob = new Blob([receiptHtml], { type: 'text/html;charset=utf-8' });
-                const receiptUrl = URL.createObjectURL(receiptBlob);
-                window.location.assign(receiptUrl);
-            } catch (error) {
-                alert('Could not open the receipt in this printer browser. Open this page in Chrome and use Print Bill.');
-            }
+            const itemRows = rows.map((item, i) => `<tr><td class="no">${i+1}</td><td class="item">${escapeReceiptText(item.name)}</td><td class="qty">${item.qty}</td><td class="rate">${item.rate.toLocaleString('en-IN')}</td><td class="amount">${money(item.amount)}</td></tr>`).join('');
+            let receipt = document.getElementById('thermalPrintReceipt');
+            if (!receipt) { receipt = document.createElement('main'); receipt.id = 'thermalPrintReceipt'; receipt.className = 'thermal-print-receipt'; document.body.appendChild(receipt); }
+            receipt.innerHTML = `<h1>SAI KIRANA STORE</h1><hr class="dash">
+              <table><thead><tr><th colspan="2">NO&nbsp; ITEM</th><th class="qty">QTY</th><th class="rate">RATE</th><th class="amount">AMOUNT</th></tr></thead><tbody>${itemRows}</tbody></table><hr class="dash">
+              <section class="totals"><div class="total-row"><span>SUBTOTAL</span><span>${money(subtotal)}</span></div><div class="total-row"><span>DISCOUNT</span><span>${money(0)}</span></div><div class="total-row"><strong>GRAND TOTAL</strong><strong>${money(subtotal)}</strong></div></section><hr class="dash">
+              <div class="thanks">THANK YOU!<br>VISIT AGAIN</div><hr class="dash"><div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div>`;
+            try { sessionStorage.setItem('saiKiranaLastBill', editor.value); } catch (_) {}
+            window.print();
         }
 
         function escapeReceiptText(value) {
