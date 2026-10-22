@@ -786,7 +786,7 @@
             const beforeCursor = editor.value.slice(0, editor.selectionStart);
             const lineStart = beforeCursor.lastIndexOf('\n') + 1;
             const prefix = beforeCursor.slice(lineStart);
-            const match = prefix.match(/(?:^|\\s)([a-zA-Z0-9]{1,12})$/);
+            const match = prefix.match(/(?:^|\s)([a-zA-Z0-9]{1,12})$/);
             return match ? { query: match[1].toLowerCase(), start: editor.selectionStart - match[1].length } : null;
         }
 
