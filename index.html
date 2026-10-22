@@ -978,7 +978,7 @@
                         }
                     } else {
                         // Keep support for standalone calculator expressions like 245*1 + 500*1.
-                        const expressionMatch = text.match(/^[\d.\s()+\-*/]+$/);
+                        const expressionMatch = text.match(/^[\d.\s()+\-*\/]+$/);
                         if (expressionMatch) {
                             try {
                                 const value = Function("'use strict'; return (" + text + ")")();
