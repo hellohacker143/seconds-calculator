@@ -186,6 +186,12 @@
             width: 100%; max-width: 440px; max-height: 82vh; overflow: auto; background: white;
             border-radius: 14px; padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.22);
         }
+        .shop-category-tabs{display:flex;gap:7px;overflow-x:auto;padding:4px 0 12px;margin-bottom:4px}
+        .shop-category-tab{flex:0 0 auto;border:1px solid #cbd5e1;border-radius:18px;padding:9px 12px;background:#f8fafc;color:#334155;font-size:12px;font-weight:800;cursor:pointer}
+        .shop-category-tab.active{background:#0088cc;color:#fff;border-color:#0088cc}
+        .default-product{grid-template-columns:20px minmax(0,1fr) auto}
+        .default-product .qty-control{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;color:#64748b;font-size:12px}
+        .default-product .qty-control input{width:76px;padding:7px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px;font-weight:700}
         .default-products-heading { display:flex; align-items:center; justify-content:space-between; font-size:19px; margin-bottom:8px; }
         .default-products-heading button { border:0; background:transparent; font-size:28px; cursor:pointer; }
         .default-products-help { font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.4; }
@@ -683,7 +689,8 @@
     <div class="default-products-modal" id="defaultProductsModal" aria-modal="true" role="dialog" aria-label="Default products">
         <div class="default-products-card">
             <div class="default-products-heading"><strong>Default Products</strong><button type="button" onclick="closeDefaultProducts()" aria-label="Close">×</button></div>
-            <p class="default-products-help">Select the products you want to add. You can uncheck any item, then tap Add Selected.</p>
+            <p class="default-products-help">Choose a shop category, select products, and set each quantity (for example, Maaza ₹350 × 5).</p>
+            <div class="shop-category-tabs" id="shopCategoryTabs"></div>
             <div class="default-products-list" id="defaultProductsList"></div>
             <div class="default-products-actions">
                 <button type="button" class="select-all-defaults" onclick="document.querySelectorAll('.default-product-check').forEach(x => x.checked = true)">Select All</button>
@@ -762,32 +769,85 @@
         ];
         let products = defaultProducts.map(product => ({ ...product }));
 
+        const shopCategories = ['All Shops', 'Tiffin Shop', 'Cigarette Shop', 'Chips Shop', 'Cool Drinks Shop', 'General Store'];
+        let activeShopCategory = 'All Shops';
+        const extraShopProducts = [
+            { name: 'Idli', shortcut: 'idli', price: 30, category: 'Tiffin Shop' },
+            { name: 'Vada', shortcut: 'vada', price: 30, category: 'Tiffin Shop' },
+            { name: 'Dosa', shortcut: 'dosa', price: 40, category: 'Tiffin Shop' },
+            { name: 'Tea', shortcut: 'tea', price: 12, category: 'Tiffin Shop' },
+            { name: 'Coffee', shortcut: 'coffee', price: 15, category: 'Tiffin Shop' },
+            { name: 'Cigarette', shortcut: 'cig', price: 20, category: 'Cigarette Shop' },
+            { name: 'Gold Flake', shortcut: 'gf', price: 20, category: 'Cigarette Shop' },
+            { name: 'Classic', shortcut: 'classic', price: 18, category: 'Cigarette Shop' },
+            { name: 'Lays', shortcut: 'l', price: 50, category: 'Chips Shop' },
+            { name: 'Mixture', shortcut: 'm', price: 30, category: 'Chips Shop' },
+            { name: 'Kurkure', shortcut: 'kurkure', price: 20, category: 'Chips Shop' },
+            { name: 'Chips', shortcut: 'chips', price: 20, category: 'Chips Shop' },
+            { name: 'Maaza', shortcut: 'maja', price: 350, category: 'Cool Drinks Shop' },
+            { name: 'Campa Cola', shortcut: 'c', price: 40, category: 'Cool Drinks Shop' },
+            { name: 'Pepsi', shortcut: 'p', price: 40, category: 'Cool Drinks Shop' },
+            { name: 'Thums Up', shortcut: 't', price: 40, category: 'Cool Drinks Shop' },
+            { name: 'Sprite', shortcut: 'sp', price: 40, category: 'Cool Drinks Shop' },
+            { name: 'Water Bottle', shortcut: 'w', price: 20, category: 'Cool Drinks Shop' }
+        ];
+        const originalDefaultProducts = defaultProducts.map(p => ({...p}));
+        function getShopCategory(product) {
+            if (product.category) return product.category;
+            const n = product.name.toLowerCase();
+            if (/idli|vada|dosa|tiffin|tea|coffee/.test(n)) return 'Tiffin Shop';
+            if (/cigarette|gold flake|classic/.test(n)) return 'Cigarette Shop';
+            if (/lays|chips|mixture|kurkure|bingo|snack/.test(n)) return 'Chips Shop';
+            if (/maaza|maja|campa|pepsi|thums|sprite|cola|water bottle|frooti|slice|7up|limca|dew|kinley/.test(n)) return 'Cool Drinks Shop';
+            return 'General Store';
+        }
         function showDefaultProducts() {
-            const names = defaultProducts.map((p, i) =>
-                '<label class="default-product"><input type="checkbox" class="default-product-check" value="' +
-                escapeReceiptText(p.shortcut) + '" checked><span>' + escapeReceiptText(p.name) +
-                '</span><strong>₹' + Number(p.price).toLocaleString('en-IN') +
-                '</strong><small>' + escapeReceiptText(p.shortcut.toUpperCase()) + '</small></label>'
-            ).join('');
-            document.getElementById('defaultProductsList').innerHTML = names;
+            const combined = [...products.map(p => ({...p, category:getShopCategory(p)}))];
+            extraShopProducts.forEach(p => {
+                if (!combined.some(x => x.name.toLowerCase() === p.name.toLowerCase())) combined.push({...p});
+            });
+            window._shopPickerProducts = combined;
+            activeShopCategory = 'All Shops';
+            renderShopCategoryTabs();
+            renderShopPickerProducts();
             document.getElementById('defaultProductsModal').classList.add('open');
         }
-
+        function renderShopCategoryTabs() {
+            const box = document.getElementById('shopCategoryTabs');
+            box.innerHTML = shopCategories.map(category =>
+                '<button type="button" class="shop-category-tab '+(activeShopCategory===category?'active':'')+'" data-category="'+escapeReceiptText(category)+'">'+escapeReceiptText(category)+'</button>'
+            ).join('');
+            box.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+                activeShopCategory = button.dataset.category;
+                renderShopCategoryTabs();
+                renderShopPickerProducts();
+            }));
+        }
+        function renderShopPickerProducts() {
+            const all = window._shopPickerProducts || [];
+            const shown = activeShopCategory === 'All Shops' ? all : all.filter(p => p.category === activeShopCategory);
+            document.getElementById('defaultProductsList').innerHTML = shown.map((p, i) =>
+                '<label class="default-product"><input type="checkbox" class="default-product-check" data-product-index="'+all.indexOf(p)+'" checked><span>'+escapeReceiptText(p.name)+'</span><strong>₹'+Number(p.price).toLocaleString('en-IN')+'</strong><small>'+escapeReceiptText((p.shortcut||'').toUpperCase())+'</small><span class="qty-control"><span>Quantity</span><input type="number" class="default-product-qty" min="1" step="1" value="1" aria-label="Quantity for '+escapeReceiptText(p.name)+'"></span></label>'
+            ).join('');
+        }
         function closeDefaultProducts() {
             document.getElementById('defaultProductsModal').classList.remove('open');
         }
-
         function addSelectedDefaultProductsToBill() {
-            const selected = Array.from(document.querySelectorAll('.default-product-check:checked'))
-                .map(input => products.find(p => p.shortcut.toLowerCase() === input.value.toLowerCase()))
-                .filter(Boolean);
-            if (!selected.length) {
-                alert('Please select at least one product.');
-                return;
-            }
-
+            const checks = Array.from(document.querySelectorAll('.default-product-check:checked'));
+            if (!checks.length) { alert('Please select at least one product.'); return; }
+            const all = window._shopPickerProducts || [];
+            const newLines = checks.map(input => {
+                const product = all[Number(input.dataset.productIndex)];
+                const label = input.closest('.default-product');
+                const quantity = Math.max(1, Number(label.querySelector('.default-product-qty').value) || 1);
+                // Ensure newly introduced shop items are also available to shortcuts and product management.
+                if (!products.some(p => p.name.toLowerCase() === product.name.toLowerCase())) {
+                    products.push({name:product.name, shortcut:product.shortcut || '', price:Number(product.price)||0});
+                }
+                return product.name + ' ' + product.price + '*' + quantity;
+            });
             const current = editor.value.trimEnd();
-            const newLines = selected.map(product => product.name + ' ' + product.price + '*1');
             editor.value = current ? current + '\n' + newLines.join('\n') : newLines.join('\n');
             editor.selectionStart = editor.selectionEnd = editor.value.length;
             closeDefaultProducts();
