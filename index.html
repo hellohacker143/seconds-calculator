@@ -1074,7 +1074,7 @@
             renderProductSuggestions();
         }
 
-        // Print a clean kirana-store receipt similar to the sample provided.
+        // Open a shareable bill URL in a new tab; all bill items are encoded in the URL.
         function printBill() {
             const rows = [];
             let subtotal = 0;
@@ -1084,20 +1084,36 @@
                 const match = text.match(/^(.*?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
                 if (!match) return;
                 const name = match[1].trim(), rate = Number(match[2]), qty = Number(match[3]);
-                const amount = rate * qty; subtotal += amount;
+                const amount = Math.round((rate * qty + Number.EPSILON) * 100) / 100;
+                subtotal += amount;
                 rows.push({ name, rate, qty, amount });
             });
             if (!rows.length) { alert('Add products first, for example: Kings 219*5'); return; }
-            const money = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const itemRows = rows.map((item, i) => `<tr><td class="no">${i+1}</td><td class="item">${escapeReceiptText(item.name)}</td><td class="qty">${item.qty}</td><td class="rate">${item.rate.toLocaleString('en-IN')}</td><td class="amount">${money(item.amount)}</td></tr>`).join('');
-            let receipt = document.getElementById('thermalPrintReceipt');
-            if (!receipt) { receipt = document.createElement('main'); receipt.id = 'thermalPrintReceipt'; receipt.className = 'thermal-print-receipt'; document.body.appendChild(receipt); }
-            receipt.innerHTML = `<h1>SAI KIRANA STORE</h1><hr class="dash">
-              <table><thead><tr><th colspan="2">NO&nbsp; ITEM</th><th class="qty">QTY</th><th class="rate">RATE</th><th class="amount">AMOUNT</th></tr></thead><tbody>${itemRows}</tbody></table><hr class="dash">
-              <section class="totals"><div class="total-row"><span>SUBTOTAL</span><span>${money(subtotal)}</span></div><div class="total-row"><span>DISCOUNT</span><span>${money(0)}</span></div><div class="total-row"><strong>GRAND TOTAL</strong><strong>${money(subtotal)}</strong></div></section><hr class="dash">
-              <div class="thanks">THANK YOU!<br>VISIT AGAIN</div><hr class="dash"><div class="tagline">QUALITY PRODUCTS | BETTER PRICES</div>`;
-            try { sessionStorage.setItem('saiKiranaLastBill', editor.value); } catch (_) {}
-            window.print();
+
+            const bill = {
+                store: 'KIRANA GENERAL STORE',
+                createdAt: new Date().toISOString(),
+                items: rows,
+                total: Math.round((subtotal + Number.EPSILON) * 100) / 100
+            };
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(bill))));
+            const billUrl = new URL('bill.html', window.location.href);
+            billUrl.hash = 'data=' + encoded;
+
+            // Open synchronously to avoid mobile-browser popup blockers.
+            const billTab = window.open('about:blank', '_blank');
+            if (billTab) {
+                billTab.location.href = billUrl.href;
+            } else {
+                // If popups are blocked, show the URL for the user to open manually.
+                const link = document.createElement('a');
+                link.href = billUrl.href;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.textContent = 'Open generated bill';
+                const message = 'Your bill URL is ready. Allow pop-ups or open this link:';
+                if (confirm(message + '\\n\\n' + billUrl.href)) window.location.href = billUrl.href;
+            }
         }
 
         function escapeReceiptText(value) {
