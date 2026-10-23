@@ -1077,43 +1077,20 @@
         // Open a shareable bill URL in a new tab; all bill items are encoded in the URL.
         function printBill() {
             const rows = [];
-            let subtotal = 0;
             editor.value.split('\n').forEach(line => {
                 const text = line.trim();
                 if (!text) return;
-                const match = text.match(/^(.*?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
-                if (!match) return;
-                const name = match[1].trim(), rate = Number(match[2]), qty = Number(match[3]);
-                const amount = Math.round((rate * qty + Number.EPSILON) * 100) / 100;
-                subtotal += amount;
-                rows.push({ name, rate, qty, amount });
+                const m = text.match(/^(.*?)\s+([0-9]+(?:\.[0-9]+)?)\s*\*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
+                if (m) rows.push({ name: m[1].trim(), rate: Number(m[2]), qty: Number(m[3]), amount: Number(m[2]) * Number(m[3]) });
             });
             if (!rows.length) { alert('Add products first, for example: Kings 219*5'); return; }
-
-            const bill = {
-                store: 'KIRANA GENERAL STORE',
-                createdAt: new Date().toISOString(),
-                items: rows,
-                total: Math.round((subtotal + Number.EPSILON) * 100) / 100
-            };
+            const bill = { store: 'KIRANA GENERAL STORE', createdAt: new Date().toISOString(), items: rows };
             const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(bill))));
-            const billUrl = new URL('bill.html', window.location.href);
-            billUrl.hash = 'data=' + encoded;
-
-            // Open synchronously to avoid mobile-browser popup blockers.
-            const billTab = window.open('about:blank', '_blank');
-            if (billTab) {
-                billTab.location.href = billUrl.href;
-            } else {
-                // If popups are blocked, show the URL for the user to open manually.
-                const link = document.createElement('a');
-                link.href = billUrl.href;
-                link.target = '_blank';
-                link.rel = 'noopener';
-                link.textContent = 'Open generated bill';
-                const message = 'Your bill URL is ready. Allow pop-ups or open this link:';
-                if (confirm(message + '\\n\\n' + billUrl.href)) window.location.href = billUrl.href;
-            }
+            const url = new URL('bill.html', location.href);
+            url.hash = 'data=' + encoded;
+            const tab = window.open('about:blank', '_blank');
+            if (tab) tab.location.href = url.href;
+            else if (confirm('Your bill URL is ready. Open it now?')) location.href = url.href;
         }
 
         function escapeReceiptText(value) {
