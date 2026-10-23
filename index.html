@@ -858,20 +858,23 @@
                 const product = all[Number(input.dataset.productIndex)];
                 const label = input.closest('.default-product');
                 const quantity = Math.max(1, Number(label.querySelector('.default-product-qty').value) || 1);
-                // Ensure newly introduced shop items are also available to shortcuts and product management.
                 if (!products.some(p => p.name.toLowerCase() === product.name.toLowerCase())) {
                     products.push({name:product.name, shortcut:product.shortcut || '', price:Number(product.price)||0});
                 }
                 return product.name + ' ' + product.price + '*' + quantity;
             });
+            // A shop category starts a fresh category-specific bill, so products from the
+            // previously selected shop do not remain mixed into the new shop's bill.
             const current = editor.value.trimEnd();
-            editor.value = current ? current + '\n' + newLines.join('\n') : newLines.join('\n');
+            const categoryIsSpecific = activeShopCategory !== 'All Shops';
+            editor.value = categoryIsSpecific
+                ? newLines.join('\n')
+                : (current ? current + '\n' + newLines.join('\n') : newLines.join('\n'));
             editor.selectionStart = editor.selectionEnd = editor.value.length;
             closeDefaultProducts();
             updateCalculator();
             editor.focus();
         }
-
         // Create New Bill directly
         function createNewBill() {
             editor.value = '';
