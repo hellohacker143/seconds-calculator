@@ -191,7 +191,10 @@
         .shop-category-tab.active{background:#0088cc;color:#fff;border-color:#0088cc}
         .default-product{grid-template-columns:20px minmax(0,1fr) auto}
         .default-product .qty-control{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;color:#64748b;font-size:12px}
-        .default-product .qty-control input{width:76px;padding:7px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px;font-weight:700}
+        .default-product .qty-control input{width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px;font-weight:700}
+        .qty-quick-picks{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%}
+        .qty-quick-picks button{padding:7px 0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#334155;font-size:12px;font-weight:800;cursor:pointer}
+        .qty-quick-picks button.active{background:#0088cc;color:#fff;border-color:#0088cc}
         .default-products-heading { display:flex; align-items:center; justify-content:space-between; font-size:19px; margin-bottom:8px; }
         .default-products-heading button { border:0; background:transparent; font-size:28px; cursor:pointer; }
         .default-products-help { font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.4; }
