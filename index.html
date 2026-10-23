@@ -826,9 +826,23 @@
         function renderShopPickerProducts() {
             const all = window._shopPickerProducts || [];
             const shown = activeShopCategory === 'All Shops' ? all : all.filter(p => p.category === activeShopCategory);
-            document.getElementById('defaultProductsList').innerHTML = shown.map((p, i) =>
-                '<label class="default-product"><input type="checkbox" class="default-product-check" data-product-index="'+all.indexOf(p)+'" checked><span>'+escapeReceiptText(p.name)+'</span><strong>₹'+Number(p.price).toLocaleString('en-IN')+'</strong><small>'+escapeReceiptText((p.shortcut||'').toUpperCase())+'</small><span class="qty-control"><span>Quantity</span><input type="number" class="default-product-qty" min="1" step="1" value="1" aria-label="Quantity for '+escapeReceiptText(p.name)+'"></span></label>'
+            const list = document.getElementById('defaultProductsList');
+            list.innerHTML = shown.map(p =>
+                '<label class="default-product"><input type="checkbox" class="default-product-check" data-product-index="'+all.indexOf(p)+'" checked><span>'+escapeReceiptText(p.name)+'</span><strong>₹'+Number(p.price).toLocaleString('en-IN')+'</strong><small>'+escapeReceiptText((p.shortcut||'').toUpperCase())+'</small><span class="qty-control"><span>Quantity — tap 1 to 7</span><span class="qty-quick-picks">'+[1,2,3,4,5,6,7].map(q => '<button type="button" data-qty="'+q+'" class="'+(q===1?'active':'')+'">'+q+'</button>').join('')+'</span><input type="number" class="default-product-qty" min="1" step="1" value="1" aria-label="Quantity for '+escapeReceiptText(p.name)+'"></span></label>'
             ).join('');
+            list.querySelectorAll('.qty-quick-picks button').forEach(button => button.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const card = button.closest('.default-product');
+                card.querySelector('.default-product-qty').value = button.dataset.qty;
+                card.querySelector('.default-product-check').checked = true;
+                card.querySelectorAll('.qty-quick-picks button').forEach(b => b.classList.toggle('active', b === button));
+            }));
+            list.querySelectorAll('.default-product-qty').forEach(input => input.addEventListener('input', () => {
+                const card = input.closest('.default-product');
+                card.querySelectorAll('.qty-quick-picks button').forEach(b => b.classList.toggle('active', Number(b.dataset.qty) === Number(input.value)));
+                if (Number(input.value) > 0) card.querySelector('.default-product-check').checked = true;
+            }));
         }
         function closeDefaultProducts() {
             document.getElementById('defaultProductsModal').classList.remove('open');
