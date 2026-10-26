@@ -165,7 +165,7 @@
 
         .dashed-divider {
             border-top: 2px dashed #000;
-            margin: 12px 0;
+            margin: 10px 0;
         }
 
         .table-header {
@@ -181,12 +181,18 @@
         .table-header .text-center { text-align: center; }
         .table-header .text-right { text-align: right; }
 
+        /* Item Row with Underline Separator */
         .item-row {
             display: grid;
             grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
             align-items: center;
-            padding: 8px 0;
+            padding: 10px 0;
             font-size: 18px;
+            border-bottom: 1px dashed #cccccc; /* Underline per product */
+        }
+
+        .item-row:last-child {
+            border-bottom: none; /* No underline after last item before divider */
         }
 
         .editable-field {
@@ -317,7 +323,6 @@
             </div>
         `;
 
-        // Load items from preset if specified, otherwise start empty
         let items = (presetParam && presets[presetParam]) ? JSON.parse(JSON.stringify(presets[presetParam])) : [{ name: "", rate: 0, qty: 0 }];
 
         function setRealTime() {
@@ -443,7 +448,7 @@
             </div>
         `;
 
-        let selectedPreset = 'cooldrinks'; // Default example preset on launch
+        let selectedPreset = 'cooldrinks';
 
         window.applyPreset = function(presetName) {
             selectedPreset = presetName;
@@ -469,7 +474,7 @@
             });
         }
 
-        generateURL(); // Pre-load example on home open
+        generateURL();
     }
 </script>
 
