@@ -1,13 +1,9 @@
-Here is the complete, updated code!
-What's Added:
- * URL Display Below QR Code: Right inside the customer QR popup modal, the direct customer view URL is now displayed directly below the QR code in a clean box. If a customer's phone camera cannot scan the QR code quickly, you can simply copy or share this direct URL link with them so they can open and view their bill instantly.
-Save the following code as form.html:
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Billing & Customer QR Generator</title>
+    <title>Shop Billing & Customer View</title>
     <!-- QRCode.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -284,7 +280,6 @@ Save the following code as form.html:
             user-select: none;
         }
 
-        /* Modal Popup for Customer QR & URL */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -314,7 +309,7 @@ Save the following code as form.html:
 <div class="modal-overlay" id="qrModal">
     <div class="modal-card">
         <h3 style="margin-top:0;">Customer Scan QR</h3>
-        <p style="font-size:13px; color:#555;">Ask customer to scan QR or open direct link below:</p>
+        <p style="font-size:13px; color:#555;">Scan QR code or click link below:</p>
         <div id="customerQrContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
         <div class="url-box" id="customerUrlDisplay"></div>
         <button class="btn-success" style="width:100%; margin-top:12px;" onclick="closeQrModal()">Done / Close</button>
@@ -535,7 +530,7 @@ Save the following code as form.html:
             renderItems();
         }
 
-        // Generate customer-scannable QR code & direct URL
+        // Generate QR code and automatically open customer view in a new tab
         window.showCustomerQr = function() {
             const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
             const payload = { shop: shopTitle, items: items };
@@ -554,6 +549,9 @@ Save the following code as form.html:
 
             document.getElementById('customerUrlDisplay').innerText = customerUrl;
             document.getElementById('qrModal').style.display = 'flex';
+
+            // Open customer view in a new browser tab automatically
+            window.open(customerUrl, '_blank');
         }
 
         window.closeQrModal = function() {
@@ -602,7 +600,7 @@ Save the following code as form.html:
         }
 
         window.generateURL = function() {
-            const shopName = document.getElementById('shopInput'].value.trim() || 'Sai Charan';
+            const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
             const baseUrl = window.location.href.split('?')[0];
             const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}`;
 
@@ -616,4 +614,3 @@ Save the following code as form.html:
 
 </body>
 </html>
-
