@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Setup & Billing Generator</title>
+    <title>Shop Setup & Smart Billing Generator</title>
     <!-- Include QRCode.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -133,7 +133,7 @@
             border-radius: 6px;
         }
 
-        /* Billing Page View */
+        /* Receipt View Formatting */
         .receipt-card {
             background: #ffffff;
             width: 100%;
@@ -251,7 +251,7 @@
 <body>
 
 <div id="appContainer" style="display: flex; justify-content: center; width: 100%;">
-    <!-- Dynamically loaded via JS -->
+    <!-- Loaded dynamically -->
 </div>
 
 <script>
@@ -260,14 +260,8 @@
     const presetParam = urlParams.get('preset');
     const container = document.getElementById('appContainer');
 
+    // Preset categories
     const presets = {
-        cooldrinks: [
-            { name: "black campa", rate: 260, qty: 5 },
-            { name: "orange campa", rate: 260, qty: 10 },
-            { name: "Red Bull Can", rate: 125, qty: 6 },
-            { name: "Thums Up 250ml", rate: 20, qty: 10 },
-            { name: "Maaza Bottle", rate: 35, qty: 8 }
-        ],
         biscuits: [
             { name: "Mom's Magic Rs.5", rate: 5, qty: 19 },
             { name: "Mom's Magic Rs.10", rate: 10, qty: 19 },
@@ -278,21 +272,40 @@
         ],
         chips: [
             { name: "Lays Blue", rate: 20, qty: 10 },
-            { name: "Kurkure Masala", rate: 10, qty: 7 }
+            { name: "Kurkure Masala", rate: 10, qty: 7 },
+            { name: "Bingo Mad Angles", rate: 20, qty: 5 },
+            { name: "Uncle Chips", rate: 20, qty: 8 }
+        ],
+        cooldrinks: [
+            { name: "black campa", rate: 260, qty: 5 },
+            { name: "orange campa", rate: 260, qty: 10 },
+            { name: "Red Bull Can", rate: 125, qty: 6 },
+            { name: "Thums Up 250ml", rate: 20, qty: 10 },
+            { name: "Maaza Bottle", rate: 35, qty: 8 }
+        ],
+        cig: [
+            { name: "Gold Flake Light", rate: 18, qty: 10 },
+            { name: "Marlboro Red", rate: 20, qty: 7 },
+            { name: "Classic Ice", rate: 18, qty: 5 }
+        ],
+        tiffin: [
+            { name: "Idli Plate", rate: 30, qty: 5 },
+            { name: "Masala Dosa", rate: 50, qty: 7 },
+            { name: "Poori Set", rate: 40, qty: 10 }
         ]
     };
 
-    // Biscuit quick list for code '11' shortcut
-    const biscuitSuggestions = [
-        { name: "Mom's Magic Rs.5", rate: 5, qty: 1 },
-        { name: "Mom's Magic Rs.10", rate: 10, qty: 1 },
-        { name: "Parle-G Rs.5", rate: 5, qty: 1 },
-        { name: "Tiger Biscuit", rate: 5, qty: 1 },
-        { name: "Karak Jack", rate: 10, qty: 1 },
-        { name: "Oreo Chocolate", rate: 20, qty: 1 }
-    ];
+    // Shortcut Codes Map
+    const codeShortcuts = {
+        '11': presets.biscuits,
+        '22': presets.chips,
+        '33': presets.cooldrinks,
+        '44': presets.cig,
+        '55': presets.tiffin
+    };
 
     if (shopParam) {
+        // --- VIEW 2: INTERACTIVE RECEIPT BILLING PAGE ---
         container.innerHTML = `
             <div class="receipt-card">
                 <div class="shop-title" contenteditable="true">${decodeURIComponent(shopParam)}</div>
@@ -366,10 +379,11 @@
         }
 
         window.updateItemValue = function(index, field, val) {
-            // Check if user typed '11' shortcut for biscuits in item name field
-            if (field === 'name' && val.trim() === '11') {
-                // Replace current row with first biscuit and insert the rest!
-                items.splice(index, 1, ...biscuitSuggestions);
+            let key = val.trim();
+            // Check for shortcut codes (11 = Biscuits, 22 = Chips, 33 = Cool Drinks, etc.)
+            if (field === 'name' && codeShortcuts[key]) {
+                const listToInsert = JSON.parse(JSON.stringify(codeShortcuts[key]));
+                items.splice(index, 1, ...listToInsert);
                 renderItems();
                 return;
             }
@@ -427,6 +441,7 @@
         renderItems();
 
     } else {
+        // --- VIEW 1: SETUP FORM & QR CODE DASHBOARD ---
         container.innerHTML = `
             <div class="main-container">
                 <div class="panel">
@@ -438,9 +453,11 @@
                     <div>
                         <label>Quick Demo Presets (Auto Products):</label>
                         <div class="preset-buttons" style="margin-top: 6px;">
-                            <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks</button>
-                            <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuit Shop (Type 11)</button>
-                            <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips Shop</button>
+                            <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuits (Type 11)</button>
+                            <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips (Type 22)</button>
+                            <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks (Type 33)</button>
+                            <button class="btn-preset" onclick="applyPreset('cig')">🚬 Cigarette (Type 44)</button>
+                            <button class="btn-preset" onclick="applyPreset('tiffin')" style="grid-column: span 2;">🍲 Tiffin Shop (Type 55)</button>
                         </div>
                     </div>
                     <button class="btn-success" onclick="generateURL()">Apply Name & Generate URL</button>
@@ -461,7 +478,7 @@
             </div>
         `;
 
-        let selectedPreset = 'cooldrinks';
+        let selectedPreset = 'biscuits';
 
         window.applyPreset = function(presetName) {
             selectedPreset = presetName;
@@ -469,7 +486,7 @@
         }
 
         window.generateURL = function() {
-            const shopName = document.getElementById('shopInput'].value.trim() || 'Sai Charan';
+            const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
             const baseUrl = window.location.href.split('?')[0];
             const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}`;
 
