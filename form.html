@@ -181,18 +181,14 @@
         .table-header .text-center { text-align: center; }
         .table-header .text-right { text-align: right; }
 
-        /* Item Row with Underline Separator */
+        /* Item Row with matching dark green thick dashed underline */
         .item-row {
             display: grid;
             grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
             align-items: center;
             padding: 10px 0;
             font-size: 18px;
-            border-bottom: 1px dashed #cccccc; /* Underline per product */
-        }
-
-        .item-row:last-child {
-            border-bottom: none; /* No underline after last item before divider */
+            border-bottom: 2px dashed #198754; /* Dark green thick dashed line */
         }
 
         .editable-field {
