@@ -1,35 +1,419 @@
-<!doctype html>
+<!<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Shop Name & QR Generator | Quick Bill</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f2f4f7;color:#111;font-family:Arial,Helvetica,sans-serif;padding:16px}.card{max-width:640px;margin:20px auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 30px #00000010}h1{font-size:27px;margin:0 0 8px}p{color:#555;line-height:1.5}.label{display:block;font-weight:700;margin:22px 0 8px;font-size:17px}input{width:100%;padding:16px;font-size:19px;border:1px solid #ccc;border-radius:12px;outline:none}input:focus{border-color:#555}button{border:0;border-radius:12px;padding:16px;font-size:18px;font-weight:700;cursor:pointer;width:100%;margin-top:12px}.apply{background:#111;color:#fff}.generate{background:#e8e8e8;color:#111}.result{display:none;margin-top:24px;border-top:1px solid #ddd;padding-top:20px}#url{font-size:15px;margin:12px 0;overflow-wrap:anywhere;background:#f5f5f5;padding:14px;border-radius:10px;line-height:1.5}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions button{background:#e8e8e8;font-size:15px;margin-top:0}#qr{display:flex;justify-content:center;margin:18px auto;padding:12px;background:white;min-height:20px}#qr img,#qr canvas{max-width:100%;height:auto!important}.hint{font-size:13px;color:#666}@media(max-width:420px){.card{padding:18px}.actions{grid-template-columns:1fr}}@media print{body{background:#fff;padding:0}.card{box-shadow:none}input,button,.hint{display:none!important}.result{display:block!important}}
-</style></head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Name & QR Generator</title>
+    <!-- Include QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .panel {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 24px;
+            width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: -24px -24px 0 -24px;
+            background-color: #0d6efd;
+        }
+
+        .panel-title.green {
+            background-color: #198754;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus {
+            border-color: #0d6efd;
+            outline: none;
+        }
+
+        button, .btn-link {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover, .btn-link:hover {
+            opacity: 0.85;
+        }
+
+        .btn-success { background-color: #198754; }
+        .btn-primary { background-color: #0d6efd; }
+
+        .url-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            word-break: break-all;
+            color: #0d6efd;
+            max-height: 70px;
+            overflow-y: auto;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        /* Billing Page Styles when 'shop' parameter is present */
+        .receipt-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 12px;
+            padding: 24px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border: 1px solid #e1e4e8;
+        }
+
+        .shop-title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            outline: none;
+        }
+
+        .meta-info {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 15px;
+            color: #000;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .dashed-divider {
+            border-top: 2px dashed #000;
+            margin: 12px 0;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            padding-bottom: 6px;
+        }
+
+        .table-header .text-center { text-align: center; }
+        .table-header .text-right { text-align: right; }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 18px;
+        }
+
+        .editable-field {
+            outline: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .editable-field:focus {
+            background-color: #eef6ff;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .item-rate, .item-qty { text-align: center; font-size: 22px; font-weight: 500; }
+        .item-amount { text-align: right; font-size: 20px; font-weight: 600; }
+
+        .remove-btn {
+            color: #dc3545;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            font-size: 18px;
+            user-select: none;
+        }
+
+        .totals-section {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .grand-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .grand-total-label, .grand-total-value {
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        .thank-you-footer {
+            background-color: #e9ecef;
+            color: #212529;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            margin-top: 15px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .thank-you-footer:hover { background-color: #dee2e6; }
+    </style>
+</head>
 <body>
-<main class="card">
-<h1>Shop Name & QR Generator</h1>
-<p>Enter a shop name to create a unique billing link and QR code. The shop-name form will not appear on the billing page.</p>
-<label class="label" for="shop">SHOP NAME</label>
-<input id="shop" placeholder="e.g. SHIVA KIRANA" autocomplete="organization">
-<button class="apply" id="apply">Apply Name</button>
-<button class="generate" id="generate">Generate Share URL + QR Code</button>
-<section class="result" id="result">
-<h2 id="heading">Your Shop URL</h2>
-<div id="url"></div>
-<div class="actions"><button id="copy">Copy URL</button><button id="open">Open Billing Page</button><button id="download">Download QR Code</button><button id="share">Share URL</button></div>
-<h3>QR Code</h3><div id="qr"></div>
-<p class="hint">Save or share this link/QR code. Opening it takes you directly to the billing page with your shop name at the top.</p>
-</section>
-</main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<div id="appContainer" style="display: flex; justify-content: center; width: 100%;">
+    <!-- Dynamically loaded via JavaScript -->
+</div>
+
 <script>
-const input=document.getElementById('shop'),result=document.getElementById('result'),urlBox=document.getElementById('url'),qrBox=document.getElementById('qr');let shareUrl='',appliedName='';
-function applyName(){const name=input.value.trim();if(!name){alert('Please enter a shop name first.');input.focus();return false}appliedName=name;input.value=name;document.getElementById('apply').textContent='Name Applied: '+name;return true}
-function generate(){if(!appliedName&&!applyName())return;shareUrl=new URL('1.html',location.href).href+'?shop='+encodeURIComponent(appliedName);urlBox.textContent=shareUrl;document.getElementById('heading').textContent=appliedName.toUpperCase()+' — YOUR SHOP URL';result.style.display='block';qrBox.innerHTML='';if(typeof QRCode==='undefined'){qrBox.textContent='QR code could not load. Check internet and reload.';return}new QRCode(qrBox,{text:shareUrl,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});}
-document.getElementById('apply').addEventListener('click',applyName);document.getElementById('generate').addEventListener('click',generate);input.addEventListener('input',()=>{appliedName='';document.getElementById('apply').textContent='Apply Name'});input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();applyName();}});
-document.getElementById('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(shareUrl)}catch(e){const t=document.createElement('textarea');t.value=shareUrl;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}document.getElementById('copy').textContent='Copied!'});
-document.getElementById('open').addEventListener('click',()=>{if(shareUrl)location.href=shareUrl});
-document.getElementById('share').addEventListener('click',async()=>{if(navigator.share){try{await navigator.share({title:appliedName+' Billing',url:shareUrl})}catch(e){}}else{try{await navigator.clipboard.writeText(shareUrl);alert('URL copied. You can paste it to share.')}catch(e){alert(shareUrl)}}});
-document.getElementById('download').addEventListener('click',()=>{const canvas=qrBox.querySelector('canvas'),img=qrBox.querySelector('img'),data=canvas?canvas.toDataURL('image/png'):img?.src;if(!data){alert('QR code is not ready yet.');return}const a=document.createElement('a');a.href=data;a.download=appliedName.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-qr.png';a.click()});
-</script></body></html>
+    const urlParams = new URLSearchParams(window.location.search);
+    const shopParam = urlParams.get('shop');
+    const container = document.getElementById('appContainer');
+
+    if (shopParam) {
+        // --- VIEW 2: FINAL INTERACTIVE BILLING PAGE ---
+        container.innerHTML = `
+            <div class="receipt-card">
+                <div class="shop-title" contenteditable="true">${decodeURIComponent(shopParam)}</div>
+                <div class="meta-info">
+                    <div>DATE: <span id="receiptDate"></span></div>
+                    <div>TIME: <span id="receiptTime"></span></div>
+                </div>
+                <div class="dashed-divider"></div>
+                <div class="table-header">
+                    <div>ITEM</div>
+                    <div class="text-center">RATE</div>
+                    <div class="text-center">QTY</div>
+                    <div class="text-right">AMOUNT</div>
+                    <div></div>
+                </div>
+                <div class="dashed-divider"></div>
+                <div id="itemsContainer"></div>
+                <div class="dashed-divider"></div>
+                <div class="totals-section">
+                    <div>TOTAL ITEM(S): <span id="totalItemsCount">0</span></div>
+                    <div>/QTY: <span id="totalQtyCount">0</span></div>
+                </div>
+                <div class="dashed-divider"></div>
+                <div class="grand-total-row">
+                    <span class="grand-total-label">TOTAL:</span>
+                    <span class="grand-total-value" id="grandTotalDisplay">0.00</span>
+                </div>
+                <div class="thank-you-footer" onclick="startNewBill()">
+                    THANK YOU FOR VISITING (NEW BILL)
+                </div>
+            </div>
+        `;
+
+        // Billing page script logic
+        let items = [{ name: "", rate: 0, qty: 0 }];
+
+        function setRealTime() {
+            const now = new Date();
+            document.getElementById('receiptDate').innerText = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+            document.getElementById('receiptTime').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        }
+
+        function renderItems() {
+            const itemsContainer = document.getElementById('itemsContainer');
+            itemsContainer.innerHTML = '';
+            let totalItems = 0, totalQty = 0, grandTotal = 0;
+
+            items.forEach((item, index) => {
+                let r = parseFloat(item.rate) || 0;
+                let q = parseFloat(item.qty) || 0;
+                let amount = r * q;
+
+                if (item.name.trim() !== "" || r > 0 || q > 0) totalItems++;
+                totalQty += q;
+                grandTotal += amount;
+
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.innerHTML = `
+                    <div class="item-name editable-field" contenteditable="true" oninput="handleInput(event, ${index}, 'name')" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
+                    <div class="item-rate editable-field" contenteditable="true" oninput="handleInput(event, ${index}, 'rate')" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate === 0 ? '0' : item.rate}</div>
+                    <div class="item-qty editable-field" contenteditable="true" oninput="handleInput(event, ${index}, 'qty')" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty === 0 ? '0' : item.qty}</div>
+                    <div class="item-amount">${amount.toFixed(2)}</div>
+                    <div class="remove-btn" onclick="removeItem(${index})">×</div>
+                `;
+                itemsContainer.appendChild(row);
+            });
+
+            document.getElementById('totalItemsCount').innerText = totalItems;
+            document.getElementById('totalQtyCount').innerText = totalQty;
+            document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+        }
+
+        window.handleInput = function(event, index, field) {
+            let val = event.target.innerText;
+            items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
+            
+            let totalQty = 0, grandTotal = 0, activeItems = 0;
+            items.forEach(it => {
+                let r = parseFloat(it.rate) || 0;
+                let q = parseFloat(it.qty) || 0;
+                if(it.name.trim() !== "" || r > 0 || q > 0) activeItems++;
+                totalQty += q;
+                grandTotal += (r * q);
+            });
+            document.getElementById('totalItemsCount').innerText = activeItems;
+            document.getElementById('totalQtyCount').innerText = totalQty;
+            document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+        }
+
+        window.handleKeyDown = function(event, index, fieldIndex) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (fieldIndex === 2) {
+                    items.push({ name: "", rate: 0, qty: 0 });
+                    renderItems();
+                    const rows = document.querySelectorAll('.item-name');
+                    if (rows.length > 0) rows[rows.length - 1].focus();
+                } else {
+                    const fields = document.querySelectorAll(`.item-row`)[index].querySelectorAll('.editable-field');
+                    if (fields[fieldIndex + 1]) fields[fieldIndex + 1].focus();
+                }
+            }
+        }
+
+        window.removeItem = function(index) {
+            items.splice(index, 1);
+            if(items.length === 0) items.push({ name: "", rate: 0, qty: 0 });
+            renderItems();
+        }
+
+        window.startNewBill = function() {
+            items = [{ name: "", rate: 0, qty: 0 }];
+            setRealTime();
+            renderItems();
+        }
+
+        setRealTime();
+        renderItems();
+
+    } else {
+        // --- VIEW 1: FORM GENERATOR DASHBOARD ---
+        container.innerHTML = `
+            <div class="main-container">
+                <div class="panel">
+                    <div class="panel-title">1. Enter Shop Name in Form</div>
+                    <div>
+                        <label>Shop Name</label>
+                        <input type="text" id="shopInput" value="Sai Charan" placeholder="Enter shop name...">
+                    </div>
+                    <button class="btn-success" onclick="generateURL()">Apply Name</button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title green">2. Generated Output & QR</div>
+                    <div>
+                        <label>Your Shop URL:</label>
+                        <div class="url-box" id="urlDisplay"></div>
+                    </div>
+                    <div>
+                        <label>QR Code:</label>
+                        <div class="qr-container" id="qrcode"></div>
+                    </div>
+                    <a href="#" id="openBillingLink" class="btn-link btn-success" target="_blank">Open Billing Page</a>
+                </div>
+            </div>
+        `;
+
+        function generateURL() {
+            const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
+            const baseUrl = window.location.href.split('?')[0];
+            const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}`;
+
+            document.getElementById('urlDisplay').innerText = finalUrl;
+            document.getElementById('openBillingLink').href = finalUrl;
+
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: finalUrl,
+                width: 140,
+                height: 140,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        generateURL();
+    }
+</script>
+
+</body>
+</html>
