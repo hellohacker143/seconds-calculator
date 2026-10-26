@@ -186,7 +186,6 @@
         .table-header .text-center { text-align: center; }
         .table-header .text-right { text-align: right; }
 
-        /* Item Row with dark green thick dashed underline */
         .item-row {
             display: grid;
             grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
@@ -224,7 +223,6 @@
             user-select: none;
         }
 
-        /* Biscuit Dropdown Selection Popup */
         .suggestion-box {
             position: absolute;
             top: 100%;
@@ -285,15 +283,13 @@
 </head>
 <body>
 
-<div id="appContainer" style="display: flex; justify-content: center; width: 100%;">
-    <!-- Loaded dynamically -->
-</div>
+<div id="appContainer" style="display: flex; justify-content: center; width: 100%;"></div>
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const shopParam = urlParams.get('shop');
     const presetParam = urlParams.get('preset');
-    const modeParam = urlParams.get('mode'); // 'view' for customer read-only view
+    const modeParam = urlParams.get('mode');
     const container = document.getElementById('appContainer');
 
     const biscuitList = [
@@ -321,7 +317,6 @@
     if (shopParam) {
         const isCustomerView = (modeParam === 'view');
 
-        // --- BILLING PAGE (Owner Mode vs Customer View Mode) ---
         container.innerHTML = `
             <div class="receipt-card">
                 <div class="shop-title" ${!isCustomerView ? 'contenteditable="true"' : ''}>${decodeURIComponent(shopParam)}</div>
@@ -381,7 +376,6 @@
                 row.className = `item-row ${isCustomerView ? 'customer-mode' : ''}`;
                 
                 if (isCustomerView) {
-                    // Customer Read-Only View (Cannot edit)
                     row.innerHTML = `
                         <div>${item.name}</div>
                         <div class="item-rate">${item.rate}</div>
@@ -389,13 +383,12 @@
                         <div class="item-amount">${amount.toFixed(2)}</div>
                     `;
                 } else {
-                    // Owner Editable View
                     row.innerHTML = `
                         <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
                         <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
                         <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
                         <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
-                        <div class="remove-btn" onclick="removeItem(${index})">×</div>
+                        <div class="remove-btn" onclick="removeItem(${index})" title="Delete">×</div>
                         
                         <div class="suggestion-box" id="popup-${index}">
                             ${biscuitList.map(b => `
@@ -489,7 +482,6 @@
         renderItems();
 
     } else {
-        // --- VIEW 1: SETUP FORM & QR CODE DASHBOARD ---
         container.innerHTML = `
             <div class="main-container">
                 <div class="panel">
@@ -534,7 +526,6 @@
         window.generateURL = function() {
             const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
             const baseUrl = window.location.href.split('?')[0];
-            // Added &mode=view so when the customer scans the QR, it opens read-only
             const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}&mode=view`;
 
             document.getElementById('urlDisplay').innerText = finalUrl;
