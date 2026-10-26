@@ -142,6 +142,7 @@
             padding: 24px 20px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             border: 1px solid #e1e4e8;
+            position: relative;
         }
 
         .shop-title {
@@ -189,6 +190,7 @@
             padding: 10px 0;
             font-size: 18px;
             border-bottom: 2px dashed #198754;
+            position: relative;
         }
 
         .editable-field {
@@ -212,6 +214,37 @@
             text-align: right;
             font-size: 18px;
             user-select: none;
+        }
+
+        /* Biscuit Dropdown Selection Popup */
+        .suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 220px;
+            background: #ffffff;
+            border: 2px solid #0d6efd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background-color: #0d6efd;
+            color: #ffffff;
         }
 
         .totals-section {
@@ -260,48 +293,29 @@
     const presetParam = urlParams.get('preset');
     const container = document.getElementById('appContainer');
 
-    // Preset categories
+    // Biscuit selection options matching your handwritten list
+    const biscuitList = [
+        { name: "moms 5", rate: 5, defaultQty: 10 },
+        { name: "moms 10", rate: 10, defaultQty: 20 },
+        { name: "parle 5", rate: 5, defaultQty: 10 },
+        { name: "parle 10", rate: 10, defaultQty: 20 }
+    ];
+
     const presets = {
         biscuits: [
-            { name: "Mom's Magic Rs.5", rate: 5, qty: 19 },
-            { name: "Mom's Magic Rs.10", rate: 10, qty: 19 },
-            { name: "Parle-G Rs.5", rate: 5, qty: 20 },
-            { name: "Tiger Biscuit", rate: 5, qty: 15 },
-            { name: "Karak Jack", rate: 10, qty: 8 },
-            { name: "Oreo Chocolate", rate: 20, qty: 6 }
+            { name: "moms 5", rate: 5, qty: 10 },
+            { name: "moms 10", rate: 10, qty: 20 },
+            { name: "parle 5", rate: 5, qty: 10 },
+            { name: "parle 10", rate: 10, qty: 20 }
         ],
         chips: [
             { name: "Lays Blue", rate: 20, qty: 10 },
-            { name: "Kurkure Masala", rate: 10, qty: 7 },
-            { name: "Bingo Mad Angles", rate: 20, qty: 5 },
-            { name: "Uncle Chips", rate: 20, qty: 8 }
+            { name: "Kurkure Masala", rate: 10, qty: 7 }
         ],
         cooldrinks: [
             { name: "black campa", rate: 260, qty: 5 },
-            { name: "orange campa", rate: 260, qty: 10 },
-            { name: "Red Bull Can", rate: 125, qty: 6 },
-            { name: "Thums Up 250ml", rate: 20, qty: 10 },
-            { name: "Maaza Bottle", rate: 35, qty: 8 }
-        ],
-        cig: [
-            { name: "Gold Flake Light", rate: 18, qty: 10 },
-            { name: "Marlboro Red", rate: 20, qty: 7 },
-            { name: "Classic Ice", rate: 18, qty: 5 }
-        ],
-        tiffin: [
-            { name: "Idli Plate", rate: 30, qty: 5 },
-            { name: "Masala Dosa", rate: 50, qty: 7 },
-            { name: "Poori Set", rate: 40, qty: 10 }
+            { name: "Thums Up 250ml", rate: 20, qty: 10 }
         ]
-    };
-
-    // Shortcut Codes Map
-    const codeShortcuts = {
-        '11': presets.biscuits,
-        '22': presets.chips,
-        '33': presets.cooldrinks,
-        '44': presets.cig,
-        '55': presets.tiffin
     };
 
     if (shopParam) {
@@ -363,12 +377,22 @@
 
                 const row = document.createElement('div');
                 row.className = 'item-row';
+                row.style.position = 'relative';
                 row.innerHTML = `
-                    <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
+                    <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText, this)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
                     <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
                     <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
                     <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
                     <div class="remove-btn" onclick="removeItem(${index})">×</div>
+                    
+                    <!-- Dropdown Popup for '11' Biscuit Options -->
+                    <div class="suggestion-box" id="popup-${index}">
+                        ${biscuitList.map(b => `
+                            <div class="suggestion-item" onclick="selectBiscuit(${index}, '${b.name}', ${b.rate}, ${b.defaultQty})">
+                                ${b.name} - ₹${b.rate} (Qty: ${b.defaultQty})
+                            </div>
+                        `).join('')}
+                    </div>
                 `;
                 itemsContainer.appendChild(row);
             });
@@ -378,14 +402,16 @@
             document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
         }
 
-        window.updateItemValue = function(index, field, val) {
+        window.updateItemValue = function(index, field, val, element = null) {
             let key = val.trim();
-            // Check for shortcut codes (11 = Biscuits, 22 = Chips, 33 = Cool Drinks, etc.)
-            if (field === 'name' && codeShortcuts[key]) {
-                const listToInsert = JSON.parse(JSON.stringify(codeShortcuts[key]));
-                items.splice(index, 1, ...listToInsert);
-                renderItems();
+            const popup = document.getElementById(`popup-${index}`);
+
+            // Show Biscuit Selection Popup when typing '11'
+            if (field === 'name' && key === '11') {
+                if (popup) popup.style.display = 'block';
                 return;
+            } else {
+                if (popup) popup.style.display = 'none';
             }
 
             items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
@@ -408,6 +434,14 @@
             document.getElementById('totalItemsCount').innerText = activeItems;
             document.getElementById('totalQtyCount').innerText = totalQty;
             document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+        }
+
+        // Handle direct selection from '11' dropdown popup
+        window.selectBiscuit = function(index, name, rate, qty) {
+            items[index].name = name;
+            items[index].rate = rate;
+            items[index].qty = qty;
+            renderItems();
         }
 
         window.handleKeyDown = function(event, index, fieldIndex) {
@@ -454,10 +488,8 @@
                         <label>Quick Demo Presets (Auto Products):</label>
                         <div class="preset-buttons" style="margin-top: 6px;">
                             <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuits (Type 11)</button>
-                            <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips (Type 22)</button>
-                            <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks (Type 33)</button>
-                            <button class="btn-preset" onclick="applyPreset('cig')">🚬 Cigarette (Type 44)</button>
-                            <button class="btn-preset" onclick="applyPreset('tiffin')" style="grid-column: span 2;">🍲 Tiffin Shop (Type 55)</button>
+                            <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips Shop</button>
+                            <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks</button>
                         </div>
                     </div>
                     <button class="btn-success" onclick="generateURL()">Apply Name & Generate URL</button>
