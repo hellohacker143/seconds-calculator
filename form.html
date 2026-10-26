@@ -260,55 +260,39 @@
     const presetParam = urlParams.get('preset');
     const container = document.getElementById('appContainer');
 
-    // Preset Sample Item Definitions including Biscuit Shop Presets
     const presets = {
         cooldrinks: [
             { name: "black campa", rate: 260, qty: 5 },
             { name: "orange campa", rate: 260, qty: 10 },
             { name: "Red Bull Can", rate: 125, qty: 6 },
             { name: "Thums Up 250ml", rate: 20, qty: 10 },
-            { name: "Maaza Bottle", rate: 35, qty: 8 },
-            { name: "Sprite Can", rate: 40, qty: 5 },
-            { name: "Pepsi 500ml", rate: 40, qty: 6 },
-            { name: "Coca Cola 500ml", rate: 40, qty: 4 },
-            { name: "Mountain Dew 500ml", rate: 40, qty: 5 },
-            { name: "Sting Energy Drink", rate: 20, qty: 12 }
+            { name: "Maaza Bottle", rate: 35, qty: 8 }
         ],
         biscuits: [
             { name: "Mom's Magic Rs.5", rate: 5, qty: 19 },
             { name: "Mom's Magic Rs.10", rate: 10, qty: 19 },
             { name: "Parle-G Rs.5", rate: 5, qty: 20 },
-            { name: "Parle-G Rs.10", rate: 10, qty: 10 },
-            { name: "Tiger Biscuit Rs.5", rate: 5, qty: 15 },
+            { name: "Tiger Biscuit", rate: 5, qty: 15 },
             { name: "Karak Jack", rate: 10, qty: 8 },
-            { name: "Oreo Chocolate", rate: 20, qty: 6 },
-            { name: "Good Day Cashew Rs.10", rate: 10, qty: 12 },
-            { name: "Bourbon Biscuits", rate: 20, qty: 7 },
-            { name: "Dark Fantasy", rate: 30, qty: 5 }
+            { name: "Oreo Chocolate", rate: 20, qty: 6 }
         ],
         chips: [
             { name: "Lays Blue", rate: 20, qty: 10 },
-            { name: "Kurkure Masala", rate: 10, qty: 7 },
-            { name: "Bingo Mad Angles", rate: 20, qty: 5 },
-            { name: "Uncle Chips", rate: 20, qty: 8 },
-            { name: "Kurkure Green", rate: 10, qty: 6 }
-        ],
-        cig: [
-            { name: "Gold Flake Light", rate: 18, qty: 10 },
-            { name: "Marlboro Red", rate: 20, qty: 7 },
-            { name: "Classic Ice", rate: 18, qty: 5 },
-            { name: "Gold Flake Kings", rate: 20, qty: 4 }
-        ],
-        tiffin: [
-            { name: "Idli Plate", rate: 30, qty: 5 },
-            { name: "Masala Dosa", rate: 50, qty: 7 },
-            { name: "Poori Set", rate: 40, qty: 10 },
-            { name: "Vada Plate", rate: 30, qty: 4 }
+            { name: "Kurkure Masala", rate: 10, qty: 7 }
         ]
     };
 
+    // Biscuit quick list for code '11' shortcut
+    const biscuitSuggestions = [
+        { name: "Mom's Magic Rs.5", rate: 5, qty: 1 },
+        { name: "Mom's Magic Rs.10", rate: 10, qty: 1 },
+        { name: "Parle-G Rs.5", rate: 5, qty: 1 },
+        { name: "Tiger Biscuit", rate: 5, qty: 1 },
+        { name: "Karak Jack", rate: 10, qty: 1 },
+        { name: "Oreo Chocolate", rate: 20, qty: 1 }
+    ];
+
     if (shopParam) {
-        // --- VIEW 2: FINAL INTERACTIVE BILLING PAGE ---
         container.innerHTML = `
             <div class="receipt-card">
                 <div class="shop-title" contenteditable="true">${decodeURIComponent(shopParam)}</div>
@@ -382,6 +366,14 @@
         }
 
         window.updateItemValue = function(index, field, val) {
+            // Check if user typed '11' shortcut for biscuits in item name field
+            if (field === 'name' && val.trim() === '11') {
+                // Replace current row with first biscuit and insert the rest!
+                items.splice(index, 1, ...biscuitSuggestions);
+                renderItems();
+                return;
+            }
+
             items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
             
             let r = parseFloat(items[index].rate) || 0;
@@ -435,7 +427,6 @@
         renderItems();
 
     } else {
-        // --- VIEW 1: HOME GENERATOR FORM & EXAMPLES ---
         container.innerHTML = `
             <div class="main-container">
                 <div class="panel">
@@ -444,18 +435,14 @@
                         <label>Shop Name</label>
                         <input type="text" id="shopInput" value="Sai Charan" placeholder="Enter shop name...">
                     </div>
-
                     <div>
                         <label>Quick Demo Presets (Auto Products):</label>
                         <div class="preset-buttons" style="margin-top: 6px;">
                             <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks</button>
-                            <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuit Shop (11)</button>
+                            <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuit Shop (Type 11)</button>
                             <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips Shop</button>
-                            <button class="btn-preset" onclick="applyPreset('cig')">🚬 Cigarette Shop</button>
-                            <button class="btn-preset" onclick="applyPreset('tiffin')" style="grid-column: span 2;">🍲 Tiffin Shop</button>
                         </div>
                     </div>
-
                     <button class="btn-success" onclick="generateURL()">Apply Name & Generate URL</button>
                 </div>
 
@@ -482,7 +469,7 @@
         }
 
         window.generateURL = function() {
-            const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
+            const shopName = document.getElementById('shopInput'].value.trim() || 'Sai Charan';
             const baseUrl = window.location.href.split('?')[0];
             const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}`;
 
