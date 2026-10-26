@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop Setup & Smart Billing Generator</title>
-    <!-- Include QRCode.js library -->
+    <title>Shop Billing & Customer QR Generator</title>
+    <!-- QRCode.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
@@ -52,9 +52,7 @@
             background-color: #0d6efd;
         }
 
-        .panel-title.green {
-            background-color: #198754;
-        }
+        .panel-title.green { background-color: #198754; }
 
         label {
             font-size: 12px;
@@ -111,6 +109,7 @@
 
         button:hover, .btn-link:hover { opacity: 0.85; }
         .btn-success { background-color: #198754; }
+        .btn-primary { background-color: #0d6efd; }
 
         .url-box {
             background: #f8f9fa;
@@ -223,6 +222,7 @@
             user-select: none;
         }
 
+        /* Biscuit Dropdown Suggestion */
         .suggestion-box {
             position: absolute;
             top: 100%;
@@ -274,22 +274,53 @@
             border-radius: 8px;
             font-weight: 700;
             font-size: 15px;
-            margin-top: 15px;
+            margin-top: 12px;
             cursor: pointer;
             user-select: none;
         }
-        .thank-you-footer:hover { background-color: #dee2e6; }
+
+        /* Modal Popup for Customer QR Code */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
 
 <div id="appContainer" style="display: flex; justify-content: center; width: 100%;"></div>
 
+<!-- Modal Dialog for Customer Scan QR Code -->
+<div class="modal-overlay" id="qrModal">
+    <div class="modal-card">
+        <h3 style="margin-top:0;">Customer Scan QR</h3>
+        <p style="font-size:13px; color:#555;">Ask customer to scan to view read-only receipt</p>
+        <div id="customerQrContainer" style="display:flex; justify-content:center; margin:15px 0;"></div>
+        <button class="btn-success" style="width:100%; margin-top:10px;" onclick="closeQrModal()">Done / Close</button>
+    </div>
+</div>
+
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const shopParam = urlParams.get('shop');
     const presetParam = urlParams.get('preset');
-    const modeParam = urlParams.get('mode');
+    const modeParam = urlParams.get('mode'); // 'customer' = Read only
+    const dataParam = urlParams.get('data');
     const container = document.getElementById('appContainer');
 
     const biscuitList = [
@@ -314,12 +345,26 @@
         ]
     };
 
-    if (shopParam) {
-        const isCustomerView = (modeParam === 'view');
+    if (shopParam || dataParam) {
+        const isCustomerView = (modeParam === 'customer');
+        let currentShopName = shopParam ? decodeURIComponent(shopParam) : 'SAI CHARAN';
+        let items = [];
+
+        if (dataParam) {
+            try {
+                const parsed = JSON.parse(decodeURIComponent(dataParam));
+                currentShopName = parsed.shop || currentShopName;
+                items = parsed.items || [];
+            } catch(e) {
+                items = [{ name: "", rate: 0, qty: 0 }];
+            }
+        } else {
+            items = (presetParam && presets[presetParam]) ? JSON.parse(JSON.stringify(presets[presetParam])) : [{ name: "", rate: 0, qty: 0 }];
+        }
 
         container.innerHTML = `
             <div class="receipt-card">
-                <div class="shop-title" ${!isCustomerView ? 'contenteditable="true"' : ''}>${decodeURIComponent(shopParam)}</div>
+                <div class="shop-title" id="shopTitleDisplay" ${!isCustomerView ? 'contenteditable="true"' : ''}>${currentShopName}</div>
                 <div class="meta-info">
                     <div>DATE: <span id="receiptDate"></span></div>
                     <div>TIME: <span id="receiptTime"></span></div>
@@ -344,13 +389,19 @@
                     <span class="grand-total-label">TOTAL:</span>
                     <span class="grand-total-value" id="grandTotalDisplay">0.00</span>
                 </div>
-                <div class="thank-you-footer" ${!isCustomerView ? 'onclick="startNewBill()"' : 'style="cursor: default;"'}>
-                    ${isCustomerView ? 'THANK YOU FOR VISITING' : 'THANK YOU FOR VISITING (NEW BILL)'}
-                </div>
+
+                ${!isCustomerView ? `
+                    <button class="btn-primary" style="width:100%; margin-top:12px;" onclick="showCustomerQr()">📱 Generate Customer QR</button>
+                    <div class="thank-you-footer" onclick="startNewBill()">
+                        THANK YOU FOR VISITING (NEW BILL)
+                    </div>
+                ` : `
+                    <div class="thank-you-footer" style="cursor:default;">
+                        THANK YOU FOR VISITING
+                    </div>
+                `}
             </div>
         `;
-
-        let items = (presetParam && presets[presetParam]) ? JSON.parse(JSON.stringify(presets[presetParam])) : [{ name: "", rate: 0, qty: 0 }];
 
         function setRealTime() {
             const now = new Date();
@@ -376,6 +427,7 @@
                 row.className = `item-row ${isCustomerView ? 'customer-mode' : ''}`;
                 
                 if (isCustomerView) {
+                    // Customer View - Cannot Edit
                     row.innerHTML = `
                         <div>${item.name}</div>
                         <div class="item-rate">${item.rate}</div>
@@ -383,6 +435,7 @@
                         <div class="item-amount">${amount.toFixed(2)}</div>
                     `;
                 } else {
+                    // Owner View - Full Edit Enabled
                     row.innerHTML = `
                         <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
                         <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
@@ -478,10 +531,35 @@
             renderItems();
         }
 
+        // Generate customer-scannable QR code containing completed bill payload
+        window.showCustomerQr = function() {
+            const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
+            const payload = { shop: shopTitle, items: items };
+            const baseUrl = window.location.href.split('?')[0];
+            const customerUrl = `${baseUrl}?data=${encodeURIComponent(JSON.stringify(payload))}&mode=customer`;
+
+            document.getElementById('customerQrContainer').innerHTML = "";
+            new QRCode(document.getElementById("customerQrContainer"), {
+                text: customerUrl,
+                width: 180,
+                height: 180,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        window.closeQrModal = function() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
         setRealTime();
         renderItems();
 
     } else {
+        // --- DASHBOARD FORM ---
         container.innerHTML = `
             <div class="main-container">
                 <div class="panel">
@@ -498,20 +576,16 @@
                             <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks</button>
                         </div>
                     </div>
-                    <button class="btn-success" onclick="generateURL()">Apply Name & Generate URL</button>
+                    <button class="btn-success" onclick="generateURL()">Apply Name & Open Billing Page</button>
                 </div>
 
                 <div class="panel">
-                    <div class="panel-title green">2. Generated Output & QR (Customer View)</div>
+                    <div class="panel-title green">2. Initial Billing URL</div>
                     <div>
-                        <label>Customer Scan URL (Read-Only):</label>
+                        <label>Shop Billing URL:</label>
                         <div class="url-box" id="urlDisplay"></div>
                     </div>
-                    <div>
-                        <label>Customer QR Code:</label>
-                        <div class="qr-container" id="qrcode"></div>
-                    </div>
-                    <a href="#" id="openBillingLink" class="btn-link btn-success" target="_blank">Open Customer View Page</a>
+                    <a href="#" id="openBillingLink" class="btn-link btn-success" target="_blank">Open Owner Billing Page</a>
                 </div>
             </div>
         `;
@@ -526,20 +600,10 @@
         window.generateURL = function() {
             const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
             const baseUrl = window.location.href.split('?')[0];
-            const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}&mode=view`;
+            const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}`;
 
             document.getElementById('urlDisplay').innerText = finalUrl;
             document.getElementById('openBillingLink').href = finalUrl;
-
-            document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), {
-                text: finalUrl,
-                width: 140,
-                height: 140,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
         }
 
         generateURL();
