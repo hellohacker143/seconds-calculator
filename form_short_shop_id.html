@@ -242,10 +242,10 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const shopParam = urlParams.get('shop');
+    const idParam = urlParams.get('id');
     const presetParam = urlParams.get('preset');
     const modeParam = urlParams.get('mode');
     const dataParam = urlParams.get('data');
-    const billParam = urlParams.get('bill');
     const container = document.getElementById('appContainer');
 
     // Complete item catalog with standard market rates
@@ -282,34 +282,15 @@
     };
 
     const isCustomerView = (modeParam === 'customer');
-    // `shop` is a short shop ID. The displayed shop name is resolved locally for this HTML-only version.
-    const shopNames = { "1": "SAI CHARAN" };
-    let currentShopName = shopNames[shopParam] || (shopParam && !/^\\d+$/.test(shopParam) ? shopParam : 'SAI CHARAN');
+    let currentShopName = shopParam ? decodeURIComponent(shopParam) : 'SAI CHARAN';
+    let currentBillId = idParam ? decodeURIComponent(idParam) : 'BILL-' + Math.floor(100000 + Math.random() * 900000);
     let items = [];
 
-    function decodeBillSnapshot(encoded) {
-        try {
-            const binary = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
-            const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
-            return JSON.parse(new TextDecoder().decode(bytes));
-        } catch (e) {
-            return null;
-        }
-    }
-
-    if (billParam) {
-        const parsed = decodeBillSnapshot(billParam);
-        if (parsed) {
-            currentShopName = parsed.shop || currentShopName;
-            items = Array.isArray(parsed.items) ? parsed.items : [];
-        } else {
-            items = JSON.parse(JSON.stringify(presets.defaultList));
-        }
-    } else if (dataParam) {
-        // Backward compatibility with older links.
+    if (dataParam) {
         try {
             const parsed = JSON.parse(decodeURIComponent(dataParam));
             currentShopName = parsed.shop || currentShopName;
+            currentBillId = parsed.id || currentBillId;
             items = parsed.items || [];
         } catch(e) {
             items = [{ name: "", rate: 0, qty: 0 }];
@@ -322,6 +303,7 @@
         <div class="receipt-card">
             <div class="shop-title" id="shopTitleDisplay" ${!isCustomerView ? 'contenteditable="true"' : ''}>${currentShopName}</div>
             <div class="meta-info">
+                <div>BILL ID: <span id="billIdDisplay" ${!isCustomerView ? 'contenteditable="true"' : ''}>${currentBillId}</span></div>
                 <div>DATE: <span id="receiptDate"></span></div>
                 <div>TIME: <span id="receiptTime"></span></div>
             </div>
@@ -481,27 +463,24 @@
     window.startNewBill = function() {
         if (isCustomerView) return;
         items = [{ name: "", rate: 0, qty: 0 }];
+        currentBillId = 'BILL-' + Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('billIdDisplay').innerText = currentBillId;
         setRealTime();
         renderItems();
     }
 
     window.showCustomerQr = function() {
         const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
-        const payload = { shop: shopTitle, items: items.map(item => ({
-            name: String(item.name || ''),
-            rate: Number(item.rate) || 0,
-            qty: Number(item.qty) || 0
-        })) };
-
-        // HTML-only: the bill snapshot must travel in the URL because there is no PHP/database.
-        // Base64URL encoding is more compact than URL-encoded JSON, but the bill link still grows with bill size.
-        const bytes = new TextEncoder().encode(JSON.stringify(payload));
-        let binary = '';
-        bytes.forEach(byte => binary += String.fromCharCode(byte));
-        const billCode = btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/g, '');
+        const billId = document.getElementById('billIdDisplay').innerText.trim() || currentBillId;
+        
+        const payload = { 
+            shop: shopTitle, 
+            id: billId,
+            items: items 
+        };
+        
         const baseUrl = window.location.href.split('?')[0];
-        const shopId = shopParam && /^\\d+$/.test(shopParam) ? shopParam : '1';
-        const customerUrl = `${baseUrl}?shop=${encodeURIComponent(shopId)}&bill=${billCode}&mode=customer`;
+        const customerUrl = `${baseUrl}?shop=${encodeURIComponent(shopTitle)}&id=${encodeURIComponent(billId)}&mode=customer&data=${encodeURIComponent(JSON.stringify(payload))}`;
 
         document.getElementById('customerQrContainer').innerHTML = "";
         new QRCode(document.getElementById("customerQrContainer"), {
@@ -515,46 +494,6 @@
 
         document.getElementById('customerUrlDisplay').innerText = customerUrl;
         document.getElementById('qrModal').style.display = 'flex';
-
-        // Add a copy button once, so customers can open the read-only URL.
-        let copyButton = document.getElementById('copyCustomerUrlButton');
-        if (!copyButton) {
-            copyButton = document.createElement('button');
-            copyButton.id = 'copyCustomerUrlButton';
-            copyButton.className = 'btn-primary';
-            copyButton.style.cssText = 'width:100%; margin-top:8px;';
-            copyButton.textContent = 'Copy Customer URL';
-            copyButton.onclick = async function() {
-                try {
-                    await navigator.clipboard.writeText(customerUrl);
-                    copyButton.textContent = 'URL Copied!';
-                } catch (e) {
-                    const temp = document.createElement('textarea');
-                    temp.value = customerUrl;
-                    document.body.appendChild(temp);
-                    temp.select();
-                    document.execCommand('copy');
-                    temp.remove();
-                    copyButton.textContent = 'URL Copied!';
-                }
-            };
-            document.getElementById('customerUrlDisplay').after(copyButton);
-        }
-        copyButton.onclick = async function() {
-            try {
-                await navigator.clipboard.writeText(customerUrl);
-                copyButton.textContent = 'URL Copied!';
-            } catch (e) {
-                const temp = document.createElement('textarea');
-                temp.value = customerUrl;
-                document.body.appendChild(temp);
-                temp.select();
-                document.execCommand('copy');
-                temp.remove();
-                copyButton.textContent = 'URL Copied!';
-            }
-        };
-
         window.open(customerUrl, '_blank');
     }
 
