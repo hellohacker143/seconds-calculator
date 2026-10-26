@@ -15,10 +15,10 @@
         body {
             background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
         }
 
@@ -140,10 +140,11 @@
             width: 100%;
             max-width: 420px;
             border-radius: 12px;
-            padding: 24px 20px;
+            padding: 20px 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             border: 1px solid #e1e4e8;
             position: relative;
+            margin-top: 5px;
         }
 
         .shop-title {
@@ -151,7 +152,7 @@
             font-size: 26px;
             font-weight: 700;
             letter-spacing: 0.5px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-transform: uppercase;
             outline: none;
         }
@@ -162,12 +163,12 @@
             font-size: 15px;
             color: #000;
             line-height: 1.4;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .dashed-divider {
             border-top: 2px dashed #000;
-            margin: 10px 0;
+            margin: 8px 0;
         }
 
         .table-header {
@@ -177,7 +178,7 @@
             font-weight: bold;
             font-size: 14px;
             text-transform: uppercase;
-            padding-bottom: 6px;
+            padding-bottom: 4px;
         }
 
         .table-header.customer-mode {
@@ -191,7 +192,7 @@
             display: grid;
             grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
             align-items: center;
-            padding: 10px 0;
+            padding: 8px 0;
             font-size: 18px;
             border-bottom: 2px dashed #198754;
             position: relative;
@@ -259,11 +260,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
+            padding: 4px 0;
         }
 
         .grand-total-label, .grand-total-value {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 800;
         }
 
@@ -271,11 +272,11 @@
             background-color: #e9ecef;
             color: #212529;
             text-align: center;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 15px;
-            margin-top: 12px;
+            font-size: 14px;
+            margin-top: 10px;
             cursor: pointer;
             user-select: none;
         }
@@ -392,7 +393,7 @@
                 </div>
 
                 ${!isCustomerView ? `
-                    <button class="btn-primary" style="width:100%; margin-top:12px;" onclick="showCustomerQr()">📱 Generate Customer QR</button>
+                    <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="showCustomerQr()">📱 Generate Customer QR</button>
                     <div class="thank-you-footer" onclick="startNewBill()">
                         THANK YOU FOR VISITING (NEW BILL)
                     </div>
@@ -530,7 +531,6 @@
             renderItems();
         }
 
-        // Generate QR code and automatically open customer view in a new tab
         window.showCustomerQr = function() {
             const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
             const payload = { shop: shopTitle, items: items };
@@ -549,8 +549,6 @@
 
             document.getElementById('customerUrlDisplay').innerText = customerUrl;
             document.getElementById('qrModal').style.display = 'flex';
-
-            // Open customer view in a new browser tab automatically
             window.open(customerUrl, '_blank');
         }
 
