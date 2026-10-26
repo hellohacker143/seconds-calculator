@@ -181,14 +181,14 @@
         .table-header .text-center { text-align: center; }
         .table-header .text-right { text-align: right; }
 
-        /* Item Row with matching dark green thick dashed underline */
+        /* Item Row with dark green thick dashed underline */
         .item-row {
             display: grid;
             grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
             align-items: center;
             padding: 10px 0;
             font-size: 18px;
-            border-bottom: 2px dashed #198754; /* Dark green thick dashed line */
+            border-bottom: 2px dashed #198754;
         }
 
         .editable-field {
@@ -260,27 +260,61 @@
     const presetParam = urlParams.get('preset');
     const container = document.getElementById('appContainer');
 
-    // Preset Sample Item Definitions
+    // Full 20 Products Cool Drinks and other Category Presets
     const presets = {
         cooldrinks: [
+            { name: "black campa", rate: 260, qty: 5 },
+            { name: "orange campa", rate: 260, qty: 10 },
+            { name: "Red Bull Can", rate: 125, qty: 6 },
             { name: "Thums Up 250ml", rate: 20, qty: 10 },
+            { name: "Maaza Bottle", rate: 35, qty: 8 },
             { name: "Sprite Can", rate: 40, qty: 5 },
-            { name: "Maaza Bottle", rate: 35, qty: 7 }
+            { name: "Pepsi 500ml", rate: 40, qty: 6 },
+            { name: "Coca Cola 500ml", rate: 40, qty: 4 },
+            { name: "Mountain Dew 500ml", rate: 40, qty: 5 },
+            { name: "Sting Energy Drink", rate: 20, qty: 12 },
+            { name: "Fanta 500ml", rate: 40, qty: 4 },
+            { name: "7Up 500ml", rate: 40, qty: 5 },
+            { name: "Slice 600ml", rate: 40, qty: 6 },
+            { name: "Appy Fizz 250ml", rate: 20, qty: 10 },
+            { name: "Paper Boat Mango", rate: 30, qty: 5 },
+            { name: "Minute Maid Pulpy", rate: 35, qty: 4 },
+            { name: "Kinley Soda 600ml", rate: 20, qty: 15 },
+            { name: "Bisleri Water 1L", rate: 20, qty: 20 },
+            { name: "B-Natural Mixed Fruit", rate: 40, qty: 3 },
+            { name: "Monster Energy", rate: 125, qty: 4 }
         ],
         chips: [
             { name: "Lays Blue", rate: 20, qty: 10 },
             { name: "Kurkure Masala", rate: 10, qty: 7 },
-            { name: "Bingo Mad Angles", rate: 20, qty: 5 }
+            { name: "Bingo Mad Angles", rate: 20, qty: 5 },
+            { name: "Uncle Chips", rate: 20, qty: 8 },
+            { name: "Kurkure Green", rate: 10, qty: 6 },
+            { name: "Lays Green", rate: 20, qty: 5 },
+            { name: "Haldiram Bhujia", rate: 30, qty: 4 },
+            { name: "Too Yumm Karare", rate: 20, qty: 5 },
+            { name: "Bingo Original", rate: 20, qty: 4 },
+            { name: "Balaji Chana Jor", rate: 10, qty: 10 }
         ],
         cig: [
             { name: "Gold Flake Light", rate: 18, qty: 10 },
             { name: "Marlboro Red", rate: 20, qty: 7 },
-            { name: "Classic Ice", rate: 18, qty: 5 }
+            { name: "Classic Ice", rate: 18, qty: 5 },
+            { name: "Gold Flake Kings", rate: 20, qty: 4 },
+            { name: "Classic Regular", rate: 18, qty: 6 },
+            { name: "Four Square", rate: 16, qty: 5 },
+            { name: "Advance", rate: 18, qty: 4 },
+            { name: "Charminar", rate: 10, qty: 10 }
         ],
         tiffin: [
             { name: "Idli Plate", rate: 30, qty: 5 },
             { name: "Masala Dosa", rate: 50, qty: 7 },
-            { name: "Poori Set", rate: 40, qty: 10 }
+            { name: "Poori Set", rate: 40, qty: 10 },
+            { name: "Vada Plate", rate: 30, qty: 4 },
+            { name: "Upma", rate: 25, qty: 5 },
+            { name: "Plain Dosa", rate: 40, qty: 3 },
+            { name: "Uttapam", rate: 45, qty: 4 },
+            { name: "Pesarattu", rate: 50, qty: 5 }
         ]
     };
 
@@ -344,10 +378,10 @@
                 const row = document.createElement('div');
                 row.className = 'item-row';
                 row.innerHTML = `
-                    <div class="item-name editable-field" contenteditable="true" oninput="handleInput(event, ${index}, 'name')" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
-                    <div class="item-rate editable-field" contenteditable="true" oninput="handleInput(event, ${index}, 'rate')" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
-                    <div class="item-qty editable-field" contenteditable="true" oninput="handleInput(event, ${index}, 'qty')" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
-                    <div class="item-amount">${amount.toFixed(2)}</div>
+                    <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
+                    <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
+                    <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
+                    <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
                     <div class="remove-btn" onclick="removeItem(${index})">×</div>
                 `;
                 itemsContainer.appendChild(row);
@@ -358,17 +392,23 @@
             document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
         }
 
-        window.handleInput = function(event, index, field) {
-            let val = event.target.innerText;
+        window.updateItemValue = function(index, field, val) {
             items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
             
+            let r = parseFloat(items[index].rate) || 0;
+            let q = parseFloat(items[index].qty) || 0;
+            let amount = r * q;
+            
+            const amtEl = document.getElementById(`amount-${index}`);
+            if(amtEl) amtEl.innerText = amount.toFixed(2);
+
             let totalQty = 0, grandTotal = 0, activeItems = 0;
             items.forEach(it => {
-                let r = parseFloat(it.rate) || 0;
-                let q = parseFloat(it.qty) || 0;
-                if(it.name.trim() !== "" || r > 0 || q > 0) activeItems++;
-                totalQty += q;
-                grandTotal += (r * q);
+                let ir = parseFloat(it.rate) || 0;
+                let iq = parseFloat(it.qty) || 0;
+                if(it.name.trim() !== "" || ir > 0 || iq > 0) activeItems++;
+                totalQty += iq;
+                grandTotal += (ir * iq);
             });
             document.getElementById('totalItemsCount').innerText = activeItems;
             document.getElementById('totalQtyCount').innerText = totalQty;
