@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Billing & Customer View</title>
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        button, .btn-link {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover, .btn-link:hover { opacity: 0.85; }
+        .btn-success { background-color: #198754; }
+        .btn-primary { background-color: #0d6efd; }
+
+        .url-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            word-break: break-all;
+            color: #0d6efd;
+            max-height: 60px;
+            overflow-y: auto;
+            text-align: left;
+            margin-top: 8px;
+        }
+
+        /* Receipt View Formatting */
+        .receipt-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 12px;
+            padding: 20px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border: 1px solid #e1e4e8;
+            position: relative;
+            margin-top: 5px;
+        }
+
+        .shop-title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            outline: none;
+        }
+
+        .meta-info {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 15px;
+            color: #000;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .dashed-divider {
+            border-top: 2px dashed #000;
+            margin: 8px 0;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            padding-bottom: 4px;
+        }
+
+        .table-header.customer-mode {
+            grid-template-columns: 2.5fr 1fr 1fr 1.5fr;
+        }
+
+        .table-header .text-center { text-align: center; }
+        .table-header .text-right { text-align: right; }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 16px;
+            border-bottom: 2px dashed #198754;
+            position: relative;
+        }
+
+        .item-row.customer-mode {
+            grid-template-columns: 2.5fr 1fr 1fr 1.5fr;
+        }
+
+        .editable-field {
+            outline: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .editable-field:focus {
+            background-color: #eef6ff;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .item-rate, .item-qty { text-align: center; font-size: 18px; font-weight: 500; }
+        .item-amount { text-align: right; font-size: 18px; font-weight: 600; }
+
+        .remove-btn {
+            color: #dc3545;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            font-size: 18px;
+            user-select: none;
+        }
+
+        .suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 260px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 2px solid #0d6efd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background-color: #0d6efd; color: #ffffff; }
+
+        .totals-section {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .grand-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .grand-total-label, .grand-total-value {
+            font-size: 30px;
+            font-weight: 800;
+        }
+
+        .thank-you-footer {
+            background-color: #e9ecef;
+            color: #212529;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div id="appContainer" style="display: flex; justify-content: center; width: 100%;"></div>
+
+<!-- Modal Dialog for Customer Scan QR Code & URL -->
+<div class="modal-overlay" id="qrModal">
+    <div class="modal-card">
+        <h3 style="margin-top:0;">Customer Scan QR</h3>
+        <p style="font-size:13px; color:#555;">Scan QR code or click link below:</p>
+        <div id="customerQrContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
+        <div class="url-box" id="customerUrlDisplay"></div>
+        <button class="btn-success" style="width:100%; margin-top:12px;" onclick="closeQrModal()">Done / Close</button>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const shopParam = urlParams.get('shop');
+    const presetParam = urlParams.get('preset');
+    const modeParam = urlParams.get('mode');
+    const dataParam = urlParams.get('data');
+    const billParam = urlParams.get('bill');
+    const container = document.getElementById('appContainer');
+
+    // Complete item catalog with standard market rates
+    const productCatalog = [
+        { name: "moms 5", rate: 5, defaultQty: 10 },
+        { name: "moms 10", rate: 10, defaultQty: 20 },
+        { name: "kings lights", rate: 18, defaultQty: 10 },
+        { name: "rr vimal", rate: 20, defaultQty: 10 },
+        { name: "sagar", rate: 10, defaultQty: 10 },
+        { name: "rajacoin", rate: 15, defaultQty: 10 },
+        { name: "rrcoin", rate: 15, defaultQty: 10 },
+        { name: "chams", rate: 10, defaultQty: 10 },
+        { name: "redwheels", rate: 20, defaultQty: 10 },
+        { name: "kings lights american edtion", rate: 20, defaultQty: 10 },
+        { name: "paris", rate: 10, defaultQty: 10 },
+        { name: "sai baba bidi", rate: 10, defaultQty: 10 }
+    ];
+
+    const presets = {
+        defaultList: [
+            { name: "moms 5", rate: 5, qty: 10 },
+            { name: "moms 10", rate: 10, qty: 20 },
+            { name: "kings lights", rate: 18, qty: 10 },
+            { name: "rr vimal", rate: 20, qty: 10 },
+            { name: "sagar", rate: 10, qty: 10 },
+            { name: "rajacoin", rate: 15, qty: 10 },
+            { name: "rrcoin", rate: 15, qty: 10 },
+            { name: "chams", rate: 10, qty: 10 },
+            { name: "redwheels", rate: 20, qty: 10 },
+            { name: "kings lights american edtion", rate: 20, qty: 10 },
+            { name: "paris", rate: 10, qty: 10 },
+            { name: "sai baba bidi", rate: 10, qty: 10 }
+        ]
+    };
+
+    const isCustomerView = (modeParam === 'customer');
+    // `shop` is a short shop ID. The displayed shop name is resolved locally for this HTML-only version.
+    const shopNames = { "1": "SAI CHARAN" };
+    let currentShopName = shopNames[shopParam] || (shopParam && !/^\\d+$/.test(shopParam) ? shopParam : 'SAI CHARAN');
+    let items = [];
+
+    function decodeBillSnapshot(encoded) {
+        try {
+            const binary = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
+            const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+            return JSON.parse(new TextDecoder().decode(bytes));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    if (billParam) {
+        const parsed = decodeBillSnapshot(billParam);
+        if (parsed) {
+            currentShopName = parsed.shop || currentShopName;
+            items = Array.isArray(parsed.items) ? parsed.items : [];
+        } else {
+            items = JSON.parse(JSON.stringify(presets.defaultList));
+        }
+    } else if (dataParam) {
+        // Backward compatibility with older links.
+        try {
+            const parsed = JSON.parse(decodeURIComponent(dataParam));
+            currentShopName = parsed.shop || currentShopName;
+            items = parsed.items || [];
+        } catch(e) {
+            items = [{ name: "", rate: 0, qty: 0 }];
+        }
+    } else {
+        items = JSON.parse(JSON.stringify(presets.defaultList));
+    }
+
+    container.innerHTML = `
+        <div class="receipt-card">
+            <div class="shop-title" id="shopTitleDisplay" ${!isCustomerView ? 'contenteditable="true"' : ''}>${currentShopName}</div>
+            <div class="meta-info">
+                <div>DATE: <span id="receiptDate"></span></div>
+                <div>TIME: <span id="receiptTime"></span></div>
+            </div>
+            <div class="dashed-divider"></div>
+            <div class="table-header ${isCustomerView ? 'customer-mode' : ''}">
+                <div>ITEM</div>
+                <div class="text-center">RATE</div>
+                <div class="text-center">QTY</div>
+                <div class="text-right">AMOUNT</div>
+                ${!isCustomerView ? '<div></div>' : ''}
+            </div>
+            <div class="dashed-divider"></div>
+            <div id="itemsContainer"></div>
+            <div class="dashed-divider"></div>
+            <div class="totals-section">
+                <div>TOTAL ITEM(S): <span id="totalItemsCount">0</span></div>
+                <div>/QTY: <span id="totalQtyCount">0</span></div>
+            </div>
+            <div class="dashed-divider"></div>
+            <div class="grand-total-row">
+                <span class="grand-total-label">TOTAL:</span>
+                <span class="grand-total-value" id="grandTotalDisplay">0.00</span>
+            </div>
+
+            ${!isCustomerView ? `
+                <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="showCustomerQr()">📱 Generate Customer QR</button>
+                <div class="thank-you-footer" onclick="startNewBill()">
+                    THANK YOU FOR VISITING
+                </div>
+            ` : `
+                <div class="thank-you-footer" style="cursor:default;">
+                    THANK YOU FOR VISITING
+                </div>
+            `}
+        </div>
+    `;
+
+    function setRealTime() {
+        const now = new Date();
+        document.getElementById('receiptDate').innerText = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+        document.getElementById('receiptTime').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+
+    function renderItems() {
+        const itemsContainer = document.getElementById('itemsContainer');
+        itemsContainer.innerHTML = '';
+        let totalItems = 0, totalQty = 0, grandTotal = 0;
+
+        items.forEach((item, index) => {
+            let r = parseFloat(item.rate) || 0;
+            let q = parseFloat(item.qty) || 0;
+            let amount = r * q;
+
+            if (item.name.trim() !== "" || r > 0 || q > 0) totalItems++;
+            totalQty += q;
+            grandTotal += amount;
+
+            const row = document.createElement('div');
+            row.className = `item-row ${isCustomerView ? 'customer-mode' : ''}`;
+            
+            if (isCustomerView) {
+                row.innerHTML = `
+                    <div>${item.name}</div>
+                    <div class="item-rate">${item.rate}</div>
+                    <div class="item-qty">${item.qty}</div>
+                    <div class="item-amount">${amount.toFixed(2)}</div>
+                `;
+            } else {
+                row.innerHTML = `
+                    <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
+                    <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
+                    <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
+                    <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
+                    <div class="remove-btn" onclick="removeItem(${index})" title="Delete">×</div>
+                    
+                    <div class="suggestion-box" id="popup-${index}">
+                        ${productCatalog.map(p => `
+                            <div class="suggestion-item" onclick="selectProduct(${index}, '${p.name}', ${p.rate}, ${p.defaultQty})">
+                                ${p.name} - ₹${p.rate} (Qty: ${p.defaultQty})
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            itemsContainer.appendChild(row);
+        });
+
+        document.getElementById('totalItemsCount').innerText = totalItems;
+        document.getElementById('totalQtyCount').innerText = totalQty;
+        document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+    }
+
+    window.updateItemValue = function(index, field, val) {
+        if (isCustomerView) return;
+        let key = val.trim();
+        const popup = document.getElementById(`popup-${index}`);
+
+        if (field === 'name' && key === '11') {
+            if (popup) popup.style.display = 'block';
+            return;
+        } else {
+            if (popup) popup.style.display = 'none';
+        }
+
+        items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
+        
+        let r = parseFloat(items[index].rate) || 0;
+        let q = parseFloat(items[index].qty) || 0;
+        let amount = r * q;
+        
+        const amtEl = document.getElementById(`amount-${index}`);
+        if(amtEl) amtEl.innerText = amount.toFixed(2);
+
+        let totalQty = 0, grandTotal = 0, activeItems = 0;
+        items.forEach(it => {
+            let ir = parseFloat(it.rate) || 0;
+            let iq = parseFloat(it.qty) || 0;
+            if(it.name.trim() !== "" || ir > 0 || iq > 0) activeItems++;
+            totalQty += iq;
+            grandTotal += (ir * iq);
+        });
+        document.getElementById('totalItemsCount').innerText = activeItems;
+        document.getElementById('totalQtyCount').innerText = totalQty;
+        document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+    }
+
+    window.selectProduct = function(index, name, rate, qty) {
+        items[index].name = name;
+        items[index].rate = rate;
+        items[index].qty = qty;
+        renderItems();
+    }
+
+    window.handleKeyDown = function(event, index, fieldIndex) {
+        if (isCustomerView) return;
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (fieldIndex === 2) {
+                items.push({ name: "", rate: 0, qty: 0 });
+                renderItems();
+                const rows = document.querySelectorAll('.item-name');
+                if (rows.length > 0) rows[rows.length - 1].focus();
+            } else {
+                const fields = document.querySelectorAll(`.item-row`)[index].querySelectorAll('.editable-field');
+                if (fields[fieldIndex + 1]) fields[fieldIndex + 1].focus();
+            }
+        }
+    }
+
+    window.removeItem = function(index) {
+        if (isCustomerView) return;
+        items.splice(index, 1);
+        if(items.length === 0) items.push({ name: "", rate: 0, qty: 0 });
+        renderItems();
+    }
+
+    window.startNewBill = function() {
+        if (isCustomerView) return;
+        items = [{ name: "", rate: 0, qty: 0 }];
+        setRealTime();
+        renderItems();
+    }
+
+    window.showCustomerQr = function() {
+        const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
+        const payload = { shop: shopTitle, items: items.map(item => ({
+            name: String(item.name || ''),
+            rate: Number(item.rate) || 0,
+            qty: Number(item.qty) || 0
+        })) };
+
+        // HTML-only: the bill snapshot must travel in the URL because there is no PHP/database.
+        // Base64URL encoding is more compact than URL-encoded JSON, but the bill link still grows with bill size.
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        let binary = '';
+        bytes.forEach(byte => binary += String.fromCharCode(byte));
+        const billCode = btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/g, '');
+        const baseUrl = window.location.href.split('?')[0];
+        const shopId = shopParam && /^\\d+$/.test(shopParam) ? shopParam : '1';
+        const customerUrl = `${baseUrl}?shop=${encodeURIComponent(shopId)}&bill=${billCode}&mode=customer`;
+
+        document.getElementById('customerQrContainer').innerHTML = "";
+        new QRCode(document.getElementById("customerQrContainer"), {
+            text: customerUrl,
+            width: 160,
+            height: 160,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        document.getElementById('customerUrlDisplay').innerText = customerUrl;
+        document.getElementById('qrModal').style.display = 'flex';
+
+        // Add a copy button once, so customers can open the read-only URL.
+        let copyButton = document.getElementById('copyCustomerUrlButton');
+        if (!copyButton) {
+            copyButton = document.createElement('button');
+            copyButton.id = 'copyCustomerUrlButton';
+            copyButton.className = 'btn-primary';
+            copyButton.style.cssText = 'width:100%; margin-top:8px;';
+            copyButton.textContent = 'Copy Customer URL';
+            copyButton.onclick = async function() {
+                try {
+                    await navigator.clipboard.writeText(customerUrl);
+                    copyButton.textContent = 'URL Copied!';
+                } catch (e) {
+                    const temp = document.createElement('textarea');
+                    temp.value = customerUrl;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    temp.remove();
+                    copyButton.textContent = 'URL Copied!';
+                }
+            };
+            document.getElementById('customerUrlDisplay').after(copyButton);
+        }
+        copyButton.onclick = async function() {
+            try {
+                await navigator.clipboard.writeText(customerUrl);
+                copyButton.textContent = 'URL Copied!';
+            } catch (e) {
+                const temp = document.createElement('textarea');
+                temp.value = customerUrl;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                temp.remove();
+                copyButton.textContent = 'URL Copied!';
+            }
+        };
+
+        window.open(customerUrl, '_blank');
+    }
+
+    window.closeQrModal = function() {
+        document.getElementById('qrModal').style.display = 'none';
+    }
+
+    setRealTime();
+    renderItems();
+</script>
+
+</body>
+</html>
