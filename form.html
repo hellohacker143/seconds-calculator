@@ -22,77 +22,6 @@
             min-height: 100vh;
         }
 
-        .main-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            max-width: 900px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .panel {
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            padding: 24px;
-            width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .panel-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin: -24px -24px 0 -24px;
-            background-color: #0d6efd;
-        }
-
-        .panel-title.green { background-color: #198754; }
-
-        label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #333;
-            text-transform: uppercase;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .preset-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .btn-preset {
-            background-color: #e9ecef;
-            color: #212529;
-            border: 1px solid #ced4da;
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .btn-preset:hover {
-            background-color: #0d6efd;
-            color: #fff;
-            border-color: #0d6efd;
-        }
-
         button, .btn-link {
             background-color: #000;
             color: #fff;
@@ -125,20 +54,11 @@
             margin-top: 8px;
         }
 
-        .qr-container {
-            display: flex;
-            justify-content: center;
-            background: #fff;
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-        }
-
         /* Receipt View Formatting */
         .receipt-card {
             background: #ffffff;
             width: 100%;
-            max-width: 420px;
+            max-width: 450px;
             border-radius: 12px;
             padding: 20px 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
@@ -193,7 +113,7 @@
             grid-template-columns: 2.2fr 1fr 1fr 1.5fr 20px;
             align-items: center;
             padding: 8px 0;
-            font-size: 18px;
+            font-size: 16px;
             border-bottom: 2px dashed #198754;
             position: relative;
         }
@@ -213,8 +133,8 @@
             border-bottom: 2px solid #007bff;
         }
 
-        .item-rate, .item-qty { text-align: center; font-size: 20px; font-weight: 500; }
-        .item-amount { text-align: right; font-size: 20px; font-weight: 600; }
+        .item-rate, .item-qty { text-align: center; font-size: 18px; font-weight: 500; }
+        .item-amount { text-align: right; font-size: 18px; font-weight: 600; }
 
         .remove-btn {
             color: #dc3545;
@@ -229,7 +149,9 @@
             position: absolute;
             top: 100%;
             left: 0;
-            width: 220px;
+            width: 260px;
+            max-height: 200px;
+            overflow-y: auto;
             background: #ffffff;
             border: 2px solid #0d6efd;
             border-radius: 8px;
@@ -240,7 +162,7 @@
 
         .suggestion-item {
             padding: 8px 12px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             border-bottom: 1px solid #eee;
             font-weight: 600;
@@ -325,289 +247,249 @@
     const dataParam = urlParams.get('data');
     const container = document.getElementById('appContainer');
 
-    const biscuitList = [
+    // Complete item catalog with standard market rates
+    const productCatalog = [
         { name: "moms 5", rate: 5, defaultQty: 10 },
         { name: "moms 10", rate: 10, defaultQty: 20 },
-        { name: "parle 5", rate: 5, defaultQty: 10 },
-        { name: "parle 10", rate: 10, defaultQty: 20 }
+        { name: "kings lights", rate: 18, defaultQty: 10 },
+        { name: "rr vimal", rate: 20, defaultQty: 10 },
+        { name: "sagar", rate: 10, defaultQty: 10 },
+        { name: "rajacoin", rate: 15, defaultQty: 10 },
+        { name: "rrcoin", rate: 15, defaultQty: 10 },
+        { name: "chams", rate: 10, defaultQty: 10 },
+        { name: "redwheels", rate: 20, defaultQty: 10 },
+        { name: "kings lights american edtion", rate: 20, defaultQty: 10 },
+        { name: "paris", rate: 10, defaultQty: 10 },
+        { name: "sai baba bidi", rate: 10, defaultQty: 10 }
     ];
 
     const presets = {
-        biscuits: [
+        defaultList: [
             { name: "moms 5", rate: 5, qty: 10 },
-            { name: "moms 10", rate: 10, qty: 20 }
-        ],
-        chips: [
-            { name: "Lays Blue", rate: 20, qty: 10 },
-            { name: "Kurkure Masala", rate: 10, qty: 7 }
-        ],
-        cooldrinks: [
-            { name: "black campa", rate: 260, qty: 5 },
-            { name: "Thums Up 250ml", rate: 20, qty: 10 }
+            { name: "moms 10", rate: 10, qty: 20 },
+            { name: "kings lights", rate: 18, qty: 10 },
+            { name: "rr vimal", rate: 20, qty: 10 },
+            { name: "sagar", rate: 10, qty: 10 },
+            { name: "rajacoin", rate: 15, qty: 10 },
+            { name: "rrcoin", rate: 15, qty: 10 },
+            { name: "chams", rate: 10, qty: 10 },
+            { name: "redwheels", rate: 20, qty: 10 },
+            { name: "kings lights american edtion", rate: 20, qty: 10 },
+            { name: "paris", rate: 10, qty: 10 },
+            { name: "sai baba bidi", rate: 10, qty: 10 }
         ]
     };
 
-    if (shopParam || dataParam) {
-        const isCustomerView = (modeParam === 'customer');
-        let currentShopName = shopParam ? decodeURIComponent(shopParam) : 'SAI CHARAN';
-        let items = [];
+    const isCustomerView = (modeParam === 'customer');
+    let currentShopName = shopParam ? decodeURIComponent(shopParam) : 'SAI CHARAN';
+    let items = [];
 
-        if (dataParam) {
-            try {
-                const parsed = JSON.parse(decodeURIComponent(dataParam));
-                currentShopName = parsed.shop || currentShopName;
-                items = parsed.items || [];
-            } catch(e) {
-                items = [{ name: "", rate: 0, qty: 0 }];
-            }
-        } else {
-            items = (presetParam && presets[presetParam]) ? JSON.parse(JSON.stringify(presets[presetParam])) : [{ name: "", rate: 0, qty: 0 }];
-        }
-
-        container.innerHTML = `
-            <div class="receipt-card">
-                <div class="shop-title" id="shopTitleDisplay" ${!isCustomerView ? 'contenteditable="true"' : ''}>${currentShopName}</div>
-                <div class="meta-info">
-                    <div>DATE: <span id="receiptDate"></span></div>
-                    <div>TIME: <span id="receiptTime"></span></div>
-                </div>
-                <div class="dashed-divider"></div>
-                <div class="table-header ${isCustomerView ? 'customer-mode' : ''}">
-                    <div>ITEM</div>
-                    <div class="text-center">RATE</div>
-                    <div class="text-center">QTY</div>
-                    <div class="text-right">AMOUNT</div>
-                    ${!isCustomerView ? '<div></div>' : ''}
-                </div>
-                <div class="dashed-divider"></div>
-                <div id="itemsContainer"></div>
-                <div class="dashed-divider"></div>
-                <div class="totals-section">
-                    <div>TOTAL ITEM(S): <span id="totalItemsCount">0</span></div>
-                    <div>/QTY: <span id="totalQtyCount">0</span></div>
-                </div>
-                <div class="dashed-divider"></div>
-                <div class="grand-total-row">
-                    <span class="grand-total-label">TOTAL:</span>
-                    <span class="grand-total-value" id="grandTotalDisplay">0.00</span>
-                </div>
-
-                ${!isCustomerView ? `
-                    <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="showCustomerQr()">📱 Generate Customer QR</button>
-                    <div class="thank-you-footer" onclick="startNewBill()">
-                        THANK YOU FOR VISITING (NEW BILL)
-                    </div>
-                ` : `
-                    <div class="thank-you-footer" style="cursor:default;">
-                        THANK YOU FOR VISITING
-                    </div>
-                `}
-            </div>
-        `;
-
-        function setRealTime() {
-            const now = new Date();
-            document.getElementById('receiptDate').innerText = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
-            document.getElementById('receiptTime').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-        }
-
-        function renderItems() {
-            const itemsContainer = document.getElementById('itemsContainer');
-            itemsContainer.innerHTML = '';
-            let totalItems = 0, totalQty = 0, grandTotal = 0;
-
-            items.forEach((item, index) => {
-                let r = parseFloat(item.rate) || 0;
-                let q = parseFloat(item.qty) || 0;
-                let amount = r * q;
-
-                if (item.name.trim() !== "" || r > 0 || q > 0) totalItems++;
-                totalQty += q;
-                grandTotal += amount;
-
-                const row = document.createElement('div');
-                row.className = `item-row ${isCustomerView ? 'customer-mode' : ''}`;
-                
-                if (isCustomerView) {
-                    row.innerHTML = `
-                        <div>${item.name}</div>
-                        <div class="item-rate">${item.rate}</div>
-                        <div class="item-qty">${item.qty}</div>
-                        <div class="item-amount">${amount.toFixed(2)}</div>
-                    `;
-                } else {
-                    row.innerHTML = `
-                        <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
-                        <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
-                        <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
-                        <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
-                        <div class="remove-btn" onclick="removeItem(${index})" title="Delete">×</div>
-                        
-                        <div class="suggestion-box" id="popup-${index}">
-                            ${biscuitList.map(b => `
-                                <div class="suggestion-item" onclick="selectBiscuit(${index}, '${b.name}', ${b.rate}, ${b.defaultQty})">
-                                    ${b.name} - ₹${b.rate} (Qty: ${b.defaultQty})
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-                itemsContainer.appendChild(row);
-            });
-
-            document.getElementById('totalItemsCount').innerText = totalItems;
-            document.getElementById('totalQtyCount').innerText = totalQty;
-            document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
-        }
-
-        window.updateItemValue = function(index, field, val) {
-            if (isCustomerView) return;
-            let key = val.trim();
-            const popup = document.getElementById(`popup-${index}`);
-
-            if (field === 'name' && key === '11') {
-                if (popup) popup.style.display = 'block';
-                return;
-            } else {
-                if (popup) popup.style.display = 'none';
-            }
-
-            items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
-            
-            let r = parseFloat(items[index].rate) || 0;
-            let q = parseFloat(items[index].qty) || 0;
-            let amount = r * q;
-            
-            const amtEl = document.getElementById(`amount-${index}`);
-            if(amtEl) amtEl.innerText = amount.toFixed(2);
-
-            let totalQty = 0, grandTotal = 0, activeItems = 0;
-            items.forEach(it => {
-                let ir = parseFloat(it.rate) || 0;
-                let iq = parseFloat(it.qty) || 0;
-                if(it.name.trim() !== "" || ir > 0 || iq > 0) activeItems++;
-                totalQty += iq;
-                grandTotal += (ir * iq);
-            });
-            document.getElementById('totalItemsCount').innerText = activeItems;
-            document.getElementById('totalQtyCount').innerText = totalQty;
-            document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
-        }
-
-        window.selectBiscuit = function(index, name, rate, qty) {
-            items[index].name = name;
-            items[index].rate = rate;
-            items[index].qty = qty;
-            renderItems();
-        }
-
-        window.handleKeyDown = function(event, index, fieldIndex) {
-            if (isCustomerView) return;
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                if (fieldIndex === 2) {
-                    items.push({ name: "", rate: 0, qty: 0 });
-                    renderItems();
-                    const rows = document.querySelectorAll('.item-name');
-                    if (rows.length > 0) rows[rows.length - 1].focus();
-                } else {
-                    const fields = document.querySelectorAll(`.item-row`)[index].querySelectorAll('.editable-field');
-                    if (fields[fieldIndex + 1]) fields[fieldIndex + 1].focus();
-                }
-            }
-        }
-
-        window.removeItem = function(index) {
-            if (isCustomerView) return;
-            items.splice(index, 1);
-            if(items.length === 0) items.push({ name: "", rate: 0, qty: 0 });
-            renderItems();
-        }
-
-        window.startNewBill = function() {
-            if (isCustomerView) return;
+    if (dataParam) {
+        try {
+            const parsed = JSON.parse(decodeURIComponent(dataParam));
+            currentShopName = parsed.shop || currentShopName;
+            items = parsed.items || [];
+        } catch(e) {
             items = [{ name: "", rate: 0, qty: 0 }];
-            setRealTime();
-            renderItems();
+        }
+    } else {
+        items = JSON.parse(JSON.stringify(presets.defaultList));
+    }
+
+    container.innerHTML = `
+        <div class="receipt-card">
+            <div class="shop-title" id="shopTitleDisplay" ${!isCustomerView ? 'contenteditable="true"' : ''}>${currentShopName}</div>
+            <div class="meta-info">
+                <div>DATE: <span id="receiptDate"></span></div>
+                <div>TIME: <span id="receiptTime"></span></div>
+            </div>
+            <div class="dashed-divider"></div>
+            <div class="table-header ${isCustomerView ? 'customer-mode' : ''}">
+                <div>ITEM</div>
+                <div class="text-center">RATE</div>
+                <div class="text-center">QTY</div>
+                <div class="text-right">AMOUNT</div>
+                ${!isCustomerView ? '<div></div>' : ''}
+            </div>
+            <div class="dashed-divider"></div>
+            <div id="itemsContainer"></div>
+            <div class="dashed-divider"></div>
+            <div class="totals-section">
+                <div>TOTAL ITEM(S): <span id="totalItemsCount">0</span></div>
+                <div>/QTY: <span id="totalQtyCount">0</span></div>
+            </div>
+            <div class="dashed-divider"></div>
+            <div class="grand-total-row">
+                <span class="grand-total-label">TOTAL:</span>
+                <span class="grand-total-value" id="grandTotalDisplay">0.00</span>
+            </div>
+
+            ${!isCustomerView ? `
+                <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="showCustomerQr()">📱 Generate Customer QR</button>
+                <div class="thank-you-footer" onclick="startNewBill()">
+                    THANK YOU FOR VISITING (NEW BILL)
+                </div>
+            ` : `
+                <div class="thank-you-footer" style="cursor:default;">
+                    THANK YOU FOR VISITING
+                </div>
+            `}
+        </div>
+    `;
+
+    function setRealTime() {
+        const now = new Date();
+        document.getElementById('receiptDate').innerText = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+        document.getElementById('receiptTime').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+
+    function renderItems() {
+        const itemsContainer = document.getElementById('itemsContainer');
+        itemsContainer.innerHTML = '';
+        let totalItems = 0, totalQty = 0, grandTotal = 0;
+
+        items.forEach((item, index) => {
+            let r = parseFloat(item.rate) || 0;
+            let q = parseFloat(item.qty) || 0;
+            let amount = r * q;
+
+            if (item.name.trim() !== "" || r > 0 || q > 0) totalItems++;
+            totalQty += q;
+            grandTotal += amount;
+
+            const row = document.createElement('div');
+            row.className = `item-row ${isCustomerView ? 'customer-mode' : ''}`;
+            
+            if (isCustomerView) {
+                row.innerHTML = `
+                    <div>${item.name}</div>
+                    <div class="item-rate">${item.rate}</div>
+                    <div class="item-qty">${item.qty}</div>
+                    <div class="item-amount">${amount.toFixed(2)}</div>
+                `;
+            } else {
+                row.innerHTML = `
+                    <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
+                    <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
+                    <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
+                    <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
+                    <div class="remove-btn" onclick="removeItem(${index})" title="Delete">×</div>
+                    
+                    <div class="suggestion-box" id="popup-${index}">
+                        ${productCatalog.map(p => `
+                            <div class="suggestion-item" onclick="selectProduct(${index}, '${p.name}', ${p.rate}, ${p.defaultQty})">
+                                ${p.name} - ₹${p.rate} (Qty: ${p.defaultQty})
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            itemsContainer.appendChild(row);
+        });
+
+        document.getElementById('totalItemsCount').innerText = totalItems;
+        document.getElementById('totalQtyCount').innerText = totalQty;
+        document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+    }
+
+    window.updateItemValue = function(index, field, val) {
+        if (isCustomerView) return;
+        let key = val.trim();
+        const popup = document.getElementById(`popup-${index}`);
+
+        if (field === 'name' && key === '11') {
+            if (popup) popup.style.display = 'block';
+            return;
+        } else {
+            if (popup) popup.style.display = 'none';
         }
 
-        window.showCustomerQr = function() {
-            const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
-            const payload = { shop: shopTitle, items: items };
-            const baseUrl = window.location.href.split('?')[0];
-            const customerUrl = `${baseUrl}?data=${encodeURIComponent(JSON.stringify(payload))}&mode=customer`;
+        items[index][field] = (field === 'rate' || field === 'qty') ? (val === "" ? 0 : val) : val;
+        
+        let r = parseFloat(items[index].rate) || 0;
+        let q = parseFloat(items[index].qty) || 0;
+        let amount = r * q;
+        
+        const amtEl = document.getElementById(`amount-${index}`);
+        if(amtEl) amtEl.innerText = amount.toFixed(2);
 
-            document.getElementById('customerQrContainer').innerHTML = "";
-            new QRCode(document.getElementById("customerQrContainer"), {
-                text: customerUrl,
-                width: 160,
-                height: 160,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+        let totalQty = 0, grandTotal = 0, activeItems = 0;
+        items.forEach(it => {
+            let ir = parseFloat(it.rate) || 0;
+            let iq = parseFloat(it.qty) || 0;
+            if(it.name.trim() !== "" || ir > 0 || iq > 0) activeItems++;
+            totalQty += iq;
+            grandTotal += (ir * iq);
+        });
+        document.getElementById('totalItemsCount').innerText = activeItems;
+        document.getElementById('totalQtyCount').innerText = totalQty;
+        document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
+    }
 
-            document.getElementById('customerUrlDisplay').innerText = customerUrl;
-            document.getElementById('qrModal').style.display = 'flex';
-            window.open(customerUrl, '_blank');
+    window.selectProduct = function(index, name, rate, qty) {
+        items[index].name = name;
+        items[index].rate = rate;
+        items[index].qty = qty;
+        renderItems();
+    }
+
+    window.handleKeyDown = function(event, index, fieldIndex) {
+        if (isCustomerView) return;
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (fieldIndex === 2) {
+                items.push({ name: "", rate: 0, qty: 0 });
+                renderItems();
+                const rows = document.querySelectorAll('.item-name');
+                if (rows.length > 0) rows[rows.length - 1].focus();
+            } else {
+                const fields = document.querySelectorAll(`.item-row`)[index].querySelectorAll('.editable-field');
+                if (fields[fieldIndex + 1]) fields[fieldIndex + 1].focus();
+            }
         }
+    }
 
-        window.closeQrModal = function() {
-            document.getElementById('qrModal').style.display = 'none';
-        }
+    window.removeItem = function(index) {
+        if (isCustomerView) return;
+        items.splice(index, 1);
+        if(items.length === 0) items.push({ name: "", rate: 0, qty: 0 });
+        renderItems();
+    }
 
+    window.startNewBill = function() {
+        if (isCustomerView) return;
+        items = [{ name: "", rate: 0, qty: 0 }];
         setRealTime();
         renderItems();
-
-    } else {
-        container.innerHTML = `
-            <div class="main-container">
-                <div class="panel">
-                    <div class="panel-title">1. Enter Shop Name & Presets</div>
-                    <div>
-                        <label>Shop Name</label>
-                        <input type="text" id="shopInput" value="Sai Charan" placeholder="Enter shop name...">
-                    </div>
-                    <div>
-                        <label>Quick Demo Presets (Auto Products):</label>
-                        <div class="preset-buttons" style="margin-top: 6px;">
-                            <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuits (Type 11)</button>
-                            <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips Shop</button>
-                            <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks</button>
-                        </div>
-                    </div>
-                    <button class="btn-success" onclick="generateURL()">Apply Name & Open Billing Page</button>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-title green">2. Initial Billing URL</div>
-                    <div>
-                        <label>Shop Billing URL:</label>
-                        <div class="url-box" id="urlDisplay"></div>
-                    </div>
-                    <a href="#" id="openBillingLink" class="btn-link btn-success" target="_blank">Open Owner Billing Page</a>
-                </div>
-            </div>
-        `;
-
-        let selectedPreset = 'biscuits';
-
-        window.applyPreset = function(presetName) {
-            selectedPreset = presetName;
-            generateURL();
-        }
-
-        window.generateURL = function() {
-            const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
-            const baseUrl = window.location.href.split('?')[0];
-            const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}`;
-
-            document.getElementById('urlDisplay').innerText = finalUrl;
-            document.getElementById('openBillingLink').href = finalUrl;
-        }
-
-        generateURL();
     }
+
+    window.showCustomerQr = function() {
+        const shopTitle = document.getElementById('shopTitleDisplay').innerText.trim() || 'SAI CHARAN';
+        const payload = { shop: shopTitle, items: items };
+        const baseUrl = window.location.href.split('?')[0];
+        const customerUrl = `${baseUrl}?data=${encodeURIComponent(JSON.stringify(payload))}&mode=customer`;
+
+        document.getElementById('customerQrContainer').innerHTML = "";
+        new QRCode(document.getElementById("customerQrContainer"), {
+            text: customerUrl,
+            width: 160,
+            height: 160,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        document.getElementById('customerUrlDisplay').innerText = customerUrl;
+        document.getElementById('qrModal').style.display = 'flex';
+        window.open(customerUrl, '_blank');
+    }
+
+    window.closeQrModal = function() {
+        document.getElementById('qrModal').style.display = 'none';
+    }
+
+    setRealTime();
+    renderItems();
 </script>
 
 </body>
