@@ -179,6 +179,10 @@
             padding-bottom: 6px;
         }
 
+        .table-header.customer-mode {
+            grid-template-columns: 2.5fr 1fr 1fr 1.5fr;
+        }
+
         .table-header .text-center { text-align: center; }
         .table-header .text-right { text-align: right; }
 
@@ -191,6 +195,10 @@
             font-size: 18px;
             border-bottom: 2px dashed #198754;
             position: relative;
+        }
+
+        .item-row.customer-mode {
+            grid-template-columns: 2.5fr 1fr 1fr 1.5fr;
         }
 
         .editable-field {
@@ -238,14 +246,8 @@
             font-weight: 600;
         }
 
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-
-        .suggestion-item:hover {
-            background-color: #0d6efd;
-            color: #ffffff;
-        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background-color: #0d6efd; color: #ffffff; }
 
         .totals-section {
             font-family: 'Courier New', Courier, monospace;
@@ -291,9 +293,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     const shopParam = urlParams.get('shop');
     const presetParam = urlParams.get('preset');
+    const modeParam = urlParams.get('mode'); // 'view' for customer read-only view
     const container = document.getElementById('appContainer');
 
-    // Biscuit selection options matching your handwritten list
     const biscuitList = [
         { name: "moms 5", rate: 5, defaultQty: 10 },
         { name: "moms 10", rate: 10, defaultQty: 20 },
@@ -304,9 +306,7 @@
     const presets = {
         biscuits: [
             { name: "moms 5", rate: 5, qty: 10 },
-            { name: "moms 10", rate: 10, qty: 20 },
-            { name: "parle 5", rate: 5, qty: 10 },
-            { name: "parle 10", rate: 10, qty: 20 }
+            { name: "moms 10", rate: 10, qty: 20 }
         ],
         chips: [
             { name: "Lays Blue", rate: 20, qty: 10 },
@@ -319,21 +319,23 @@
     };
 
     if (shopParam) {
-        // --- VIEW 2: INTERACTIVE RECEIPT BILLING PAGE ---
+        const isCustomerView = (modeParam === 'view');
+
+        // --- BILLING PAGE (Owner Mode vs Customer View Mode) ---
         container.innerHTML = `
             <div class="receipt-card">
-                <div class="shop-title" contenteditable="true">${decodeURIComponent(shopParam)}</div>
+                <div class="shop-title" ${!isCustomerView ? 'contenteditable="true"' : ''}>${decodeURIComponent(shopParam)}</div>
                 <div class="meta-info">
                     <div>DATE: <span id="receiptDate"></span></div>
                     <div>TIME: <span id="receiptTime"></span></div>
                 </div>
                 <div class="dashed-divider"></div>
-                <div class="table-header">
+                <div class="table-header ${isCustomerView ? 'customer-mode' : ''}">
                     <div>ITEM</div>
                     <div class="text-center">RATE</div>
                     <div class="text-center">QTY</div>
                     <div class="text-right">AMOUNT</div>
-                    <div></div>
+                    ${!isCustomerView ? '<div></div>' : ''}
                 </div>
                 <div class="dashed-divider"></div>
                 <div id="itemsContainer"></div>
@@ -347,8 +349,8 @@
                     <span class="grand-total-label">TOTAL:</span>
                     <span class="grand-total-value" id="grandTotalDisplay">0.00</span>
                 </div>
-                <div class="thank-you-footer" onclick="startNewBill()">
-                    THANK YOU FOR VISITING (NEW BILL)
+                <div class="thank-you-footer" ${!isCustomerView ? 'onclick="startNewBill()"' : 'style="cursor: default;"'}>
+                    ${isCustomerView ? 'THANK YOU FOR VISITING' : 'THANK YOU FOR VISITING (NEW BILL)'}
                 </div>
             </div>
         `;
@@ -376,24 +378,34 @@
                 grandTotal += amount;
 
                 const row = document.createElement('div');
-                row.className = 'item-row';
-                row.style.position = 'relative';
-                row.innerHTML = `
-                    <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText, this)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
-                    <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
-                    <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
-                    <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
-                    <div class="remove-btn" onclick="removeItem(${index})">×</div>
-                    
-                    <!-- Dropdown Popup for '11' Biscuit Options -->
-                    <div class="suggestion-box" id="popup-${index}">
-                        ${biscuitList.map(b => `
-                            <div class="suggestion-item" onclick="selectBiscuit(${index}, '${b.name}', ${b.rate}, ${b.defaultQty})">
-                                ${b.name} - ₹${b.rate} (Qty: ${b.defaultQty})
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
+                row.className = `item-row ${isCustomerView ? 'customer-mode' : ''}`;
+                
+                if (isCustomerView) {
+                    // Customer Read-Only View (Cannot edit)
+                    row.innerHTML = `
+                        <div>${item.name}</div>
+                        <div class="item-rate">${item.rate}</div>
+                        <div class="item-qty">${item.qty}</div>
+                        <div class="item-amount">${amount.toFixed(2)}</div>
+                    `;
+                } else {
+                    // Owner Editable View
+                    row.innerHTML = `
+                        <div class="item-name editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'name', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 0)">${item.name}</div>
+                        <div class="item-rate editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'rate', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 1)">${item.rate}</div>
+                        <div class="item-qty editable-field" contenteditable="true" oninput="updateItemValue(${index}, 'qty', this.innerText)" onkeydown="handleKeyDown(event, ${index}, 2)">${item.qty}</div>
+                        <div class="item-amount" id="amount-${index}">${amount.toFixed(2)}</div>
+                        <div class="remove-btn" onclick="removeItem(${index})">×</div>
+                        
+                        <div class="suggestion-box" id="popup-${index}">
+                            ${biscuitList.map(b => `
+                                <div class="suggestion-item" onclick="selectBiscuit(${index}, '${b.name}', ${b.rate}, ${b.defaultQty})">
+                                    ${b.name} - ₹${b.rate} (Qty: ${b.defaultQty})
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
                 itemsContainer.appendChild(row);
             });
 
@@ -402,11 +414,11 @@
             document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
         }
 
-        window.updateItemValue = function(index, field, val, element = null) {
+        window.updateItemValue = function(index, field, val) {
+            if (isCustomerView) return;
             let key = val.trim();
             const popup = document.getElementById(`popup-${index}`);
 
-            // Show Biscuit Selection Popup when typing '11'
             if (field === 'name' && key === '11') {
                 if (popup) popup.style.display = 'block';
                 return;
@@ -436,7 +448,6 @@
             document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2);
         }
 
-        // Handle direct selection from '11' dropdown popup
         window.selectBiscuit = function(index, name, rate, qty) {
             items[index].name = name;
             items[index].rate = rate;
@@ -445,6 +456,7 @@
         }
 
         window.handleKeyDown = function(event, index, fieldIndex) {
+            if (isCustomerView) return;
             if (event.key === 'Enter') {
                 event.preventDefault();
                 if (fieldIndex === 2) {
@@ -460,12 +472,14 @@
         }
 
         window.removeItem = function(index) {
+            if (isCustomerView) return;
             items.splice(index, 1);
             if(items.length === 0) items.push({ name: "", rate: 0, qty: 0 });
             renderItems();
         }
 
         window.startNewBill = function() {
+            if (isCustomerView) return;
             items = [{ name: "", rate: 0, qty: 0 }];
             setRealTime();
             renderItems();
@@ -496,16 +510,16 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-title green">2. Generated Output & QR</div>
+                    <div class="panel-title green">2. Generated Output & QR (Customer View)</div>
                     <div>
-                        <label>Your Shop URL:</label>
+                        <label>Customer Scan URL (Read-Only):</label>
                         <div class="url-box" id="urlDisplay"></div>
                     </div>
                     <div>
-                        <label>QR Code:</label>
+                        <label>Customer QR Code:</label>
                         <div class="qr-container" id="qrcode"></div>
                     </div>
-                    <a href="#" id="openBillingLink" class="btn-link btn-success" target="_blank">Open Billing Page</a>
+                    <a href="#" id="openBillingLink" class="btn-link btn-success" target="_blank">Open Customer View Page</a>
                 </div>
             </div>
         `;
@@ -520,7 +534,8 @@
         window.generateURL = function() {
             const shopName = document.getElementById('shopInput').value.trim() || 'Sai Charan';
             const baseUrl = window.location.href.split('?')[0];
-            const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}`;
+            // Added &mode=view so when the customer scans the QR, it opens read-only
+            const finalUrl = `${baseUrl}?shop=${encodeURIComponent(shopName)}&preset=${selectedPreset}&mode=view`;
 
             document.getElementById('urlDisplay').innerText = finalUrl;
             document.getElementById('openBillingLink').href = finalUrl;
