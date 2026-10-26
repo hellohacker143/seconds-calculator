@@ -260,7 +260,7 @@
     const presetParam = urlParams.get('preset');
     const container = document.getElementById('appContainer');
 
-    // Full 20 Products Cool Drinks and other Category Presets
+    // Preset Sample Item Definitions including Biscuit Shop Presets
     const presets = {
         cooldrinks: [
             { name: "black campa", rate: 260, qty: 5 },
@@ -272,49 +272,38 @@
             { name: "Pepsi 500ml", rate: 40, qty: 6 },
             { name: "Coca Cola 500ml", rate: 40, qty: 4 },
             { name: "Mountain Dew 500ml", rate: 40, qty: 5 },
-            { name: "Sting Energy Drink", rate: 20, qty: 12 },
-            { name: "Fanta 500ml", rate: 40, qty: 4 },
-            { name: "7Up 500ml", rate: 40, qty: 5 },
-            { name: "Slice 600ml", rate: 40, qty: 6 },
-            { name: "Appy Fizz 250ml", rate: 20, qty: 10 },
-            { name: "Paper Boat Mango", rate: 30, qty: 5 },
-            { name: "Minute Maid Pulpy", rate: 35, qty: 4 },
-            { name: "Kinley Soda 600ml", rate: 20, qty: 15 },
-            { name: "Bisleri Water 1L", rate: 20, qty: 20 },
-            { name: "B-Natural Mixed Fruit", rate: 40, qty: 3 },
-            { name: "Monster Energy", rate: 125, qty: 4 }
+            { name: "Sting Energy Drink", rate: 20, qty: 12 }
+        ],
+        biscuits: [
+            { name: "Mom's Magic Rs.5", rate: 5, qty: 19 },
+            { name: "Mom's Magic Rs.10", rate: 10, qty: 19 },
+            { name: "Parle-G Rs.5", rate: 5, qty: 20 },
+            { name: "Parle-G Rs.10", rate: 10, qty: 10 },
+            { name: "Tiger Biscuit Rs.5", rate: 5, qty: 15 },
+            { name: "Karak Jack", rate: 10, qty: 8 },
+            { name: "Oreo Chocolate", rate: 20, qty: 6 },
+            { name: "Good Day Cashew Rs.10", rate: 10, qty: 12 },
+            { name: "Bourbon Biscuits", rate: 20, qty: 7 },
+            { name: "Dark Fantasy", rate: 30, qty: 5 }
         ],
         chips: [
             { name: "Lays Blue", rate: 20, qty: 10 },
             { name: "Kurkure Masala", rate: 10, qty: 7 },
             { name: "Bingo Mad Angles", rate: 20, qty: 5 },
             { name: "Uncle Chips", rate: 20, qty: 8 },
-            { name: "Kurkure Green", rate: 10, qty: 6 },
-            { name: "Lays Green", rate: 20, qty: 5 },
-            { name: "Haldiram Bhujia", rate: 30, qty: 4 },
-            { name: "Too Yumm Karare", rate: 20, qty: 5 },
-            { name: "Bingo Original", rate: 20, qty: 4 },
-            { name: "Balaji Chana Jor", rate: 10, qty: 10 }
+            { name: "Kurkure Green", rate: 10, qty: 6 }
         ],
         cig: [
             { name: "Gold Flake Light", rate: 18, qty: 10 },
             { name: "Marlboro Red", rate: 20, qty: 7 },
             { name: "Classic Ice", rate: 18, qty: 5 },
-            { name: "Gold Flake Kings", rate: 20, qty: 4 },
-            { name: "Classic Regular", rate: 18, qty: 6 },
-            { name: "Four Square", rate: 16, qty: 5 },
-            { name: "Advance", rate: 18, qty: 4 },
-            { name: "Charminar", rate: 10, qty: 10 }
+            { name: "Gold Flake Kings", rate: 20, qty: 4 }
         ],
         tiffin: [
             { name: "Idli Plate", rate: 30, qty: 5 },
             { name: "Masala Dosa", rate: 50, qty: 7 },
             { name: "Poori Set", rate: 40, qty: 10 },
-            { name: "Vada Plate", rate: 30, qty: 4 },
-            { name: "Upma", rate: 25, qty: 5 },
-            { name: "Plain Dosa", rate: 40, qty: 3 },
-            { name: "Uttapam", rate: 45, qty: 4 },
-            { name: "Pesarattu", rate: 50, qty: 5 }
+            { name: "Vada Plate", rate: 30, qty: 4 }
         ]
     };
 
@@ -460,9 +449,10 @@
                         <label>Quick Demo Presets (Auto Products):</label>
                         <div class="preset-buttons" style="margin-top: 6px;">
                             <button class="btn-preset" onclick="applyPreset('cooldrinks')">🥤 Cool Drinks</button>
+                            <button class="btn-preset" onclick="applyPreset('biscuits')">🍪 Biscuit Shop (11)</button>
                             <button class="btn-preset" onclick="applyPreset('chips')">🍿 Chips Shop</button>
                             <button class="btn-preset" onclick="applyPreset('cig')">🚬 Cigarette Shop</button>
-                            <button class="btn-preset" onclick="applyPreset('tiffin')">🍲 Tiffin Shop</button>
+                            <button class="btn-preset" onclick="applyPreset('tiffin')" style="grid-column: span 2;">🍲 Tiffin Shop</button>
                         </div>
                     </div>
 
