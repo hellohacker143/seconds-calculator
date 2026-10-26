@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shop Name & QR Generator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f4f7;color:#151515;font-family:Arial,sans-serif;padding:20px}.card{max-width:620px;margin:20px auto;background:white;border-radius:18px;padding:24px;box-shadow:0 8px 30px #00000012}h1{font-size:27px;margin:0 0 8px}p{color:#555;line-height:1.5}.label{display:block;font-weight:700;margin:22px 0 8px}input{width:100%;padding:14px;font-size:18px;border:1px solid #bbb;border-radius:10px}button{border:0;border-radius:10px;padding:14px 18px;font-size:16px;font-weight:700;cursor:pointer}.generate{background:#111;color:#fff;width:100%;margin-top:14px}.result{display:none;margin-top:24px;border-top:1px solid #ddd;padding-top:20px}#url{font-size:14px;margin:12px 0;overflow-wrap:anywhere;background:#f5f5f5;padding:12px;border-radius:8px} .actions{display:flex;gap:10px;flex-wrap:wrap}.actions button{background:#e8e8e8;flex:1}#qr{display:flex;justify-content:center;margin:20px auto;padding:12px;background:white;min-height:20px}#qr img,#qr canvas{max-width:100%;height:auto!important}.hint{font-size:13px;color:#666}@media print{body{background:#fff;padding:0}.card{box-shadow:none}input,.generate,.actions,.hint{display:none!important}.result{display:block!important}}
+</style></head><body>
+<main class="card"><h1>Shop Name & QR Generator</h1><p>Enter a shop name to create a separate billing link and QR code. This form does not appear on the billing page.</p>
+<label class="label" for="shop">Shop name</label><input id="shop" placeholder="e.g. Sai Charan Kirana" autocomplete="organization">
+<button class="generate" id="generate">Generate URL + QR Code</button>
+<section class="result" id="result"><h2 id="heading">Your shop link</h2><div id="url"></div><div class="actions"><button id="copy">Copy URL</button><button id="open">Open Billing Page</button><button id="download">Download QR</button></div><div id="qr"></div><p class="hint">Scan the QR code to open the shop's billing page. Each shop name gets its own URL.</p></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const input=document.getElementById('shop'),result=document.getElementById('result'),urlBox=document.getElementById('url'),qrBox=document.getElementById('qr');
+let shareUrl='';
+function generate(){const name=input.value.trim();if(!name){alert('Please enter a shop name first.');input.focus();return}shareUrl=new URL('1.html',location.href).href+'?shop='+encodeURIComponent(name);urlBox.textContent=shareUrl;document.getElementById('heading').textContent=name+' — Billing Link';result.style.display='block';qrBox.innerHTML='';if(typeof QRCode==='undefined'){qrBox.textContent='QR library could not load. Please check internet and reload this page.';return}new QRCode(qrBox,{text:shareUrl,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});}
+document.getElementById('generate').addEventListener('click',generate);input.addEventListener('keydown',e=>{if(e.key==='Enter')generate()});
+document.getElementById('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(shareUrl);document.getElementById('copy').textContent='Copied!'}catch(e){const t=document.createElement('textarea');t.value=shareUrl;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();document.getElementById('copy').textContent='Copied!'}});
+document.getElementById('open').addEventListener('click',()=>{if(shareUrl)window.open(shareUrl,'_blank')});
+document.getElementById('download').addEventListener('click',()=>{const canvas=qrBox.querySelector('canvas');const img=qrBox.querySelector('img');const data=canvas?canvas.toDataURL('image/png'):img?.src;if(!data){alert('QR code is not ready yet.');return}const a=document.createElement('a');a.href=data;a.download='shop-qr-code.png';a.click()});
+</script></body></html>
