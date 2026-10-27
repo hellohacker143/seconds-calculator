@@ -7,87 +7,141 @@
 <title>Shop Bill | DukaanBill</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f5f7;color:#111;font-family:Arial,Helvetica,sans-serif}.screen{max-width:520px;margin:18px auto;padding:14px}.panel{background:#fff;border-radius:14px;padding:20px;box-shadow:0 4px 18px #0000000d;margin-bottom:16px}h1,h2{margin-top:0}label{display:block;font-weight:700;margin:12px 0 6px}input{width:100%;padding:13px;border:1px solid #cfd4dc;border-radius:8px;font-size:16px}button,.button{display:inline-block;border:0;border-radius:8px;background:#111;color:#fff;padding:12px 15px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer}.primary{background:#087b43}.full{width:100%;margin-top:12px}.muted{color:#626b76;font-size:13px;line-height:1.5}.generated{display:none;margin-top:18px}.url{word-break:break-all;background:#f5f6f8;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px}.qr{display:flex;justify-content:center;padding:14px}.receipt{background:#fff;width:100%;padding:8px 0;color:#000}.shop-title{text-align:center;font-size:30px;font-weight:700;margin:12px 0 32px;text-transform:uppercase;overflow-wrap:anywhere}.meta{font-size:20px;line-height:1.35;font-weight:700}.dash{border-top:5px dashed #111;margin:20px 0}.headrow,.itemrow{display:grid;grid-template-columns:minmax(0,2fr) .8fr .7fr 1.25fr 20px;gap:4px;align-items:center}.headrow{font-weight:700;text-align:center;font-size:14px;padding:12px 0 24px}.headrow span:first-child{text-align:center}.itemrow{padding:12px 0;border-bottom:2px dashed #111}.itemrow input{border:0;border-radius:0;padding:5px 1px;font-size:15px;min-width:0;text-align:center;background:transparent}.itemrow input:first-child{text-align:left}.itemrow .amount{font-size:15px;font-weight:700;text-align:right;overflow-wrap:anywhere}.remove{color:#c00;font-size:20px;font-weight:bold;text-align:center;cursor:pointer}.totals{font-size:20px;font-weight:700;line-height:1.5}.grand{display:flex;justify-content:space-between;align-items:center;font-size:clamp(30px,8vw,44px);font-weight:800;margin-top:20px;gap:8px}.thanks{background:#e8e8e8;border-radius:13px;padding:20px 10px;text-align:center;font-weight:700;font-size:clamp(17px,4.5vw,25px);margin-top:24px}.receipt-actions{display:flex;gap:8px;margin-top:12px}.receipt-actions button{flex:1}.hidden{display:none!important}
-@media print{body{background:#fff}.screen{margin:0;padding:0;max-width:none}.no-print,#setupPanel{display:none!important}.panel{box-shadow:none;padding:0;border-radius:0}.receipt{padding:0}.shop-title{font-size:26px;margin:0 0 20px}.meta{font-size:16px}.dash{margin:12px 0}.headrow{padding:8px 0 14px}.itemrow{padding:7px 0}.thanks{margin-top:14px}.receipt-actions{display:none}}
+*{box-sizing:border-box}body{margin:0;background:#f1f4f3;color:#111;font-family:Arial,Helvetica,sans-serif}.screen{max-width:720px;margin:14px auto;padding:10px}.panel{background:#fff;border-radius:8px;padding:18px;box-shadow:0 2px 12px #0000000b;margin-bottom:14px}h1,h2{margin-top:0}label{display:block;font-weight:700;margin:12px 0 6px}input{width:100%;padding:12px;border:1px solid #cfd4dc;border-radius:7px;font-size:16px}button,.button{display:inline-block;border:0;border-radius:7px;background:#111;color:#fff;padding:12px 15px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer}.primary{background:#087b43}.secondary{background:#e8ecea;color:#111}.full{width:100%;margin-top:12px}.muted{color:#626b76;font-size:13px;line-height:1.5}.generated{display:none;margin-top:18px}.url{word-break:break-all;background:#f5f6f8;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px}.qr{display:flex;justify-content:center;padding:14px}.hidden{display:none!important}.receipt{background:#fff;width:100%;padding:2px 0;color:#000}.shop-title{text-align:center;font-size:30px;font-weight:700;margin:12px 0 26px;text-transform:uppercase;overflow-wrap:anywhere}.meta{font-size:20px;line-height:1.4;font-weight:600}.dash{border-top:3px dashed #111;margin:14px 0}.bill-grid{display:grid;grid-template-columns:minmax(0,2.2fr) .7fr .65fr 1.15fr;gap:5px;align-items:center}.bill-head{font-size:clamp(13px,3.3vw,19px);font-weight:700;padding:0 0 8px}.bill-head span:not(:first-child),.bill-row .rate,.bill-row .qty,.bill-row .amount{text-align:right}.bill-row{font-size:clamp(14px,3.8vw,21px);padding:12px 0;border-bottom:3px dashed #478c72;overflow-wrap:anywhere}.bill-row .name{min-width:0;overflow-wrap:anywhere}.bill-row input{border:0;border-radius:0;padding:2px 0;font-size:inherit;min-width:0;background:transparent}.bill-row .name-input{text-align:left}.bill-row .rate-input,.bill-row .qty-input{text-align:right}.amount{text-align:right;overflow-wrap:anywhere}.check-cell{display:flex;align-items:center;justify-content:center}.check-cell input{width:20px;height:20px;accent-color:#087b43}.row-editor{display:grid;grid-template-columns:minmax(0,2.2fr) .7fr .65fr 1.15fr 24px;gap:5px;align-items:center}.row-editor .amount{font-size:clamp(14px,3.8vw,21px)}.row-editor .remove{color:#c00;font-weight:bold;font-size:23px;text-align:center;cursor:pointer}.row-editor .verify{display:flex;justify-content:center}.row-editor .verify input{width:19px;height:19px;accent-color:#087b43}.progress{padding:10px 12px;background:#eef7f1;border-radius:7px;color:#155e3b;font-weight:700;margin:12px 0}.actions{display:flex;gap:8px;margin-top:16px}.actions button{flex:1}.totals{font-size:20px;font-weight:700;line-height:1.55}.grand{display:flex;justify-content:space-between;align-items:center;font-size:clamp(32px,8vw,48px);font-weight:800;margin-top:20px;gap:8px}.thanks{background:#e8e8e8;border-radius:12px;padding:18px 8px;text-align:center;font-weight:700;font-size:clamp(17px,4.5vw,25px);margin-top:22px}.bill-id{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:4px}.overview-title{margin-bottom:8px}.overview-note{font-size:13px;color:#5d6670;line-height:1.5}
+@media(max-width:420px){.panel{padding:12px}.screen{padding:7px}.shop-title{font-size:26px}.meta{font-size:17px}.row-editor{grid-template-columns:minmax(0,2fr) .65fr .6fr 1fr 22px;gap:3px}.bill-grid{grid-template-columns:minmax(0,2fr) .65fr .6fr 1fr;gap:3px}.bill-row{padding:10px 0}.row-editor input{padding:4px 0}.bill-id{font-size:17px}}
+@media print{body{background:#fff}.screen{margin:0;padding:0;max-width:none}.no-print,#setupPanel,#editorPanel,#overviewPanel{display:none!important}.panel{box-shadow:none;padding:0;border-radius:0;margin:0}.receipt{padding:0}.shop-title{font-size:26px;margin:0 0 20px}.meta{font-size:16px}.dash{margin:12px 0}.bill-row{padding:8px 0}.thanks{margin-top:14px}}
 </style>
 </head>
 <body>
 <main class="screen">
 <section class="panel" id="setupPanel">
 <h1>Create Your Shop Bill Page</h1>
-<p class="muted">Enter the shop owner's name. A shareable website link and QR code will be generated. Each shop uses this same page with its own shop name.</p>
+<p class="muted">Enter your shop name to generate its shareable website link and QR code.</p>
 <label for="shopInput">Shop name / Owner name</label>
 <input id="shopInput" maxlength="70" placeholder="e.g. Sai Charan Gupta Kirana Store" autocomplete="organization">
 <button class="primary full" id="generateBtn">Generate Shop Website + QR</button>
 <div class="generated" id="generated">
-<h3>Your shop website link</h3>
-<div class="url" id="shopUrl"></div>
-<div class="receipt-actions"><a class="button" id="openShop" target="_blank" rel="noopener">Open Website</a><button type="button" id="copyLink">Copy Link</button></div>
-<h3 style="text-align:center;margin-top:22px">Shop QR Code</h3>
-<div class="qr" id="qrCode"></div>
+<h3>Your shop website link</h3><div class="url" id="shopUrl"></div>
+<div class="actions"><a class="button" id="openShop" target="_blank" rel="noopener">Open Website</a><button type="button" id="copyLink">Copy Link</button></div>
+<h3 style="text-align:center;margin-top:22px">Shop QR Code</h3><div class="qr" id="qrCode"></div>
 <button class="full" id="downloadQr">Download QR Code</button>
-<p class="muted">Share the link or QR code with your customers. The link opens this receipt page with your shop name.</p>
+<p class="muted">Share this link or QR code. It opens a billing page carrying your shop name.</p>
 </div>
 </section>
-<section class="panel hidden" id="receiptPanel">
-<div class="receipt" id="receipt">
-<div class="shop-title" id="shopTitle">YOUR SHOP</div>
-<div class="meta">DATE: <span id="date"></span><br>TIME: <span id="time"></span></div>
+
+<section class="panel hidden" id="editorPanel">
+<h2>Enter Products</h2>
+<div class="muted">Keyboard: product name → ENTER → rate → ENTER → quantity → ENTER to create the next row. Check each product after verifying it.</div>
+<div class="receipt" style="margin-top:14px">
+<div class="shop-title" id="editorShopTitle">YOUR SHOP</div>
+<div class="meta">DATE: <span id="editDate"></span><br>TIME: <span id="editTime"></span></div>
 <div class="dash"></div>
-<div class="headrow"><span>ITEM</span><span>RATE</span><span>QTY</span><span>AMOUNT</span><span></span></div>
+<div class="bill-grid bill-head"><span>ITEM</span><span>RATE</span><span>QTY</span><span>AMOUNT</span></div>
 <div class="dash" style="margin-top:0"></div>
 <div id="items"></div>
+</div>
+<div class="progress" id="verifyProgress">0 of 0 products checked</div>
+<div class="actions"><button class="primary" id="reviewBtn">Review Bill</button></div>
+</section>
+
+<section class="panel hidden" id="overviewPanel">
+<h2 class="overview-title">Confirm Bill Overview</h2>
+<p class="overview-note">Check the product names, rates, quantities and total before proceeding. Use Back to Edit if anything needs correcting.</p>
+<div class="receipt">
+<div class="shop-title" id="overviewShopTitle">YOUR SHOP</div>
+<div class="bill-id">BILL ID: <span id="overviewBillId"></span></div>
+<div class="meta">DATE: <span id="overviewDate"></span><br>TIME: <span id="overviewTime"></span></div>
 <div class="dash"></div>
-<div class="totals">TOTAL ITEM(S): <span id="itemCount">0</span><br>/QTY: <span id="qtyCount">0</span></div>
+<div class="bill-grid bill-head"><span>ITEM</span><span>RATE</span><span>QTY</span><span>AMOUNT</span></div>
+<div class="dash" style="margin-top:0"></div>
+<div id="overviewItems"></div>
 <div class="dash"></div>
-<div class="grand"><span>TOTAL:</span><span id="grandTotal">0.00</span></div>
+<div class="totals">TOTAL ITEM(S): <span id="overviewItemCount">0</span><br>/QTY: <span id="overviewQtyCount">0</span></div>
+<div class="dash"></div>
+<div class="grand"><span>TOTAL:</span><span id="overviewGrandTotal">0.00</span></div>
+</div>
+<div class="progress" id="overviewProgress"></div>
+<div class="actions"><button class="secondary" id="backEdit">Back to Edit</button><button class="primary" id="proceedBtn">PROCEED</button></div>
+</section>
+
+<section class="panel hidden" id="finalPanel">
+<div class="receipt" id="finalReceipt">
+<div class="shop-title" id="finalShopTitle">YOUR SHOP</div>
+<div class="bill-id">BILL ID: <span id="finalBillId"></span></div>
+<div class="meta">DATE: <span id="finalDate"></span><br>TIME: <span id="finalTime"></span></div>
+<div class="dash"></div>
+<div class="bill-grid bill-head"><span>ITEM</span><span>RATE</span><span>QTY</span><span>AMOUNT</span></div>
+<div class="dash" style="margin-top:0"></div>
+<div id="finalItems"></div>
+<div class="dash"></div>
+<div class="totals">TOTAL ITEM(S): <span id="finalItemCount">0</span><br>/QTY: <span id="finalQtyCount">0</span></div>
+<div class="dash"></div>
+<div class="grand"><span>TOTAL:</span><span id="finalGrandTotal">0.00</span></div>
 <div class="thanks">THANK YOU FOR VISITING</div>
 </div>
-<div class="receipt-actions no-print"><button class="primary" id="addItem">+ Add Item</button><button id="printBill">Print Bill</button></div>
-<p class="muted no-print">Tip: Enter item name, rate, and quantity. Amount and total calculate automatically.</p>
 </section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
-const requestedShop=params.get('shop');
-let rows=[];
+const requestedShop=(params.get('shop')||'').trim();
+let billId='',billDate='',billTime='',locked=false;
+const money=n=>(Number(n)||0).toFixed(2);
 function safeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function makeShopUrl(name){const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('shop',name.trim());return u.href;}
 function generate(){
- const name=$('shopInput').value.trim();
- if(!name){alert('Please enter a shop name.');$('shopInput').focus();return;}
- const url=makeShopUrl(name);
- $('shopUrl').textContent=url;$('openShop').href=url;$('generated').style.display='block';
- $('qrCode').innerHTML='';
- if(typeof QRCode==='undefined'){$('qrCode').textContent='QR library could not load. Please check your internet connection.';}
+ const name=$('shopInput').value.trim();if(!name){alert('Please enter a shop name.');$('shopInput').focus();return;}
+ const url=makeShopUrl(name);$('shopUrl').textContent=url;$('openShop').href=url;$('generated').style.display='block';$('qrCode').innerHTML='';
+ if(typeof QRCode==='undefined')$('qrCode').textContent='QR library could not load. Check your internet connection.';
  else new QRCode($('qrCode'),{text:url,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
 }
 $('generateBtn').addEventListener('click',generate);
-$('copyLink').addEventListener('click',async()=>{const text=$('shopUrl').textContent;try{await navigator.clipboard.writeText(text);$('copyLink').textContent='Copied!';}catch(e){prompt('Copy your shop link:',text);}});
-$('downloadQr').addEventListener('click',()=>{const canvas=$('qrCode').querySelector('canvas');const img=$('qrCode').querySelector('img');const data=canvas?canvas.toDataURL('image/png'):img?.src;if(!data){alert('Generate the QR code first.');return;}const a=document.createElement('a');a.href=data;a.download=( $('shopInput').value.trim().replace(/[^a-z0-9]+/gi,'-')||'shop')+'-qr.png';a.click();});
-function updateClock(){const d=new Date();$('date').textContent=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();$('time').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+$('copyLink').addEventListener('click',async()=>{const t=$('shopUrl').textContent;try{await navigator.clipboard.writeText(t);$('copyLink').textContent='Copied!';}catch(e){prompt('Copy your shop link:',t);}});
+$('downloadQr').addEventListener('click',()=>{const c=$('qrCode').querySelector('canvas'),i=$('qrCode').querySelector('img'),data=c?c.toDataURL('image/png'):i?.src;if(!data){alert('Generate the QR code first.');return;}const a=document.createElement('a');a.href=data;a.download=( $('shopInput').value.trim().replace(/[^a-z0-9]+/gi,'-')||'shop')+'-qr.png';a.click();});
+function nowParts(){const d=new Date();return {date:String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(),time:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};}
+function setEditorClock(){const t=nowParts();$('editDate').textContent=t.date;$('editTime').textContent=t.time;}
+function activeRows(){return [...document.querySelectorAll('.row-editor')].map(row=>{const i=row.querySelectorAll('input');return {row,name:i[0].value.trim(),rate:Number(i[1].value)||0,qty:Number(i[2].value)||0,checked:i[3].checked};}).filter(x=>x.name||x.rate||x.qty);}
 function addRow(name='',rate='',qty=''){
- const id=Date.now()+Math.random();rows.push({id,name,rate,qty});
- const row=document.createElement('div');row.className='itemrow';row.dataset.id=id;
- row.innerHTML='<input aria-label="Item name" placeholder="Item name" value="'+safeText(name)+'"><input aria-label="Rate" type="number" min="0" step="0.01" placeholder="0" value="'+safeText(rate)+'"><input aria-label="Quantity" type="number" min="0" step="1" placeholder="0" value="'+safeText(qty)+'"><span class="amount">0.00</span><span class="remove" role="button" tabindex="0" aria-label="Remove item">×</span>';
- row.querySelectorAll('input').forEach(input=>input.addEventListener('input',calculate));
- row.querySelector('.remove').addEventListener('click',()=>{rows=rows.filter(x=>x.id!==id);row.remove();calculate();});
- row.querySelector('.remove').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();row.querySelector('.remove').click();}});
- $('items').appendChild(row);calculate();
+ const row=document.createElement('div');row.className='row-editor bill-row';
+ row.innerHTML='<input class="name-input" aria-label="Item name" placeholder="Item name" value="'+safeText(name)+'"><input class="rate-input" aria-label="Rate" type="number" min="0" step="0.01" placeholder="0" value="'+safeText(rate)+'"><input class="qty-input" aria-label="Quantity" type="number" min="0" step="1" placeholder="0" value="'+safeText(qty)+'"><span class="amount">0.00</span><span class="verify"><input type="checkbox" aria-label="Product verified" title="Mark product verified"></span>';
+ const inputs=[...row.querySelectorAll('input')];inputs.slice(0,3).forEach(input=>input.addEventListener('input',()=>{calculateEditor();row.querySelector('.verify input').checked=false;}));
+ inputs[3].addEventListener('change',()=>{row.classList.toggle('verified',inputs[3].checked);calculateEditor();});
+ inputs.slice(0,3).forEach((input,index)=>input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(index<2)inputs[index+1].focus();else{let next=row.nextElementSibling;if(!next){addRow();next=row.nextElementSibling;}next.querySelector('.name-input').focus();}}}));
+ $('items').appendChild(row);calculateEditor();if(!name&&!rate&&!qty)inputs[0].focus();return row;
 }
-function calculate(){let total=0,qtyTotal=0,count=0;
- document.querySelectorAll('.itemrow').forEach(row=>{const inputs=row.querySelectorAll('input');const rate=Number(inputs[1].value)||0,qty=Number(inputs[2].value)||0;const amount=rate*qty;row.querySelector('.amount').textContent=amount.toFixed(2);total+=amount;if(inputs[0].value.trim()||rate||qty)count++;qtyTotal+=qty;});
- $('itemCount').textContent=count;$('qtyCount').textContent=qtyTotal;$('grandTotal').textContent=total.toFixed(2);
+function calculateEditor(){
+ let total=0,qty=0,count=0,checked=0;
+ document.querySelectorAll('.row-editor').forEach(row=>{const i=row.querySelectorAll('input');const name=i[0].value.trim(),rate=Number(i[1].value)||0,q=Number(i[2].value)||0;row.querySelector('.amount').textContent=money(rate*q);if(name||rate||q){count++;total+=rate*q;qty+=q;if(i[3].checked)checked++;}});
+ $('verifyProgress').textContent=checked+' of '+count+' products checked';return {total,qty,count,checked};
 }
-$('addItem').addEventListener('click',()=>addRow());
-$('printBill').addEventListener('click',()=>window.print());
-updateClock();setInterval(updateClock,15000);
-if(requestedShop){
- const shop=requestedShop.trim()||'YOUR SHOP';document.title=shop+' | Shop Bill';$('shopTitle').textContent=shop.toUpperCase();$('setupPanel').classList.add('hidden');$('receiptPanel').classList.remove('hidden');addRow();
-}else{
- $('shopInput').value='';
+function stampBill(){const t=nowParts();billDate=t.date;billTime=t.time;billId='BILL-'+Math.floor(100000+Math.random()*900000);}
+function buildRows(target,items,editable=false){
+ $(target).innerHTML='';
+ items.forEach(item=>{const row=document.createElement('div');row.className='bill-grid bill-row';row.innerHTML='<span class="name">'+safeText(item.name)+'</span><span class="rate">'+safeText(item.rate)+'</span><span class="qty">'+safeText(item.qty)+'</span><span class="amount">'+money(item.rate*item.qty)+'</span>';$(target).appendChild(row);});
 }
+function fillSummary(prefix,items,stats){
+ $(prefix+'ItemCount').textContent=stats.count;$(prefix+'QtyCount').textContent=stats.qty;$(prefix+'GrandTotal').textContent=money(stats.total);
+}
+function reviewBill(){
+ const items=activeRows();if(!items.length){alert('Please enter at least one product.');$('items').querySelector('.name-input')?.focus();return;}
+ const incomplete=items.find(x=>!x.name||!(x.rate>=0)||!(x.qty>0));
+ if(incomplete){alert('Please enter a product name and a quantity greater than zero for every product.');return;}
+ const unchecked=items.filter(x=>!x.checked);if(unchecked.length){alert('Please check every product after verifying it. '+unchecked.length+' product(s) still need checking.');return;}
+ stampBill();const stats=calculateEditor();
+ $('overviewShopTitle').textContent=$('editorShopTitle').textContent;$('overviewBillId').textContent=billId;$('overviewDate').textContent=billDate;$('overviewTime').textContent=billTime;buildRows('overviewItems',items);fillSummary('overview',items,stats);$('overviewProgress').textContent='All '+items.length+' products verified. Review the bill and click PROCEED to finalize.';$('editorPanel').classList.add('hidden');$('overviewPanel').classList.remove('hidden');window.scrollTo(0,0);
+}
+$('reviewBtn').addEventListener('click',reviewBill);
+$('backEdit').addEventListener('click',()=>{$('overviewPanel').classList.add('hidden');$('editorPanel').classList.remove('hidden');window.scrollTo(0,0);});
+$('proceedBtn').addEventListener('click',()=>{
+ const items=activeRows();const stats=calculateEditor();if(items.some(x=>!x.checked)){alert('A product has changed or is unchecked. Verify all products again.');$('overviewPanel').classList.add('hidden');$('editorPanel').classList.remove('hidden');return;}
+ $('finalShopTitle').textContent=$('editorShopTitle').textContent;$('finalBillId').textContent=billId;$('finalDate').textContent=billDate;$('finalTime').textContent=billTime;buildRows('finalItems',items);
+ $('finalItemCount').textContent=stats.count;$('finalQtyCount').textContent=stats.qty;$('finalGrandTotal').textContent=money(stats.total);
+ $('overviewPanel').classList.add('hidden');$('editorPanel').classList.add('hidden');$('finalPanel').classList.remove('hidden');locked=true;window.scrollTo(0,0);
+});
+function startShop(name){
+ document.title=name+' | Shop Bill';$('editorShopTitle').textContent=name.toUpperCase();$('setupPanel').classList.add('hidden');$('editorPanel').classList.remove('hidden');setEditorClock();addRow();
+}
+if(requestedShop)startShop(requestedShop);
 </script>
 </body>
 </html>
