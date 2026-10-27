@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>Shop Bill | DukaanBill</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f5f7;color:#111;font-family:Arial,Helvetica,sans-serif}.screen{max-width:520px;margin:18px auto;padding:14px}.panel{background:#fff;border-radius:14px;padding:20px;box-shadow:0 4px 18px #0000000d;margin-bottom:16px}h1,h2{margin-top:0}label{display:block;font-weight:700;margin:12px 0 6px}input{width:100%;padding:13px;border:1px solid #cfd4dc;border-radius:8px;font-size:16px}button,.button{display:inline-block;border:0;border-radius:8px;background:#111;color:#fff;padding:12px 15px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer}.primary{background:#087b43}.full{width:100%;margin-top:12px}.muted{color:#626b76;font-size:13px;line-height:1.5}.generated{display:none;margin-top:18px}.url{word-break:break-all;background:#f5f6f8;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px}.qr{display:flex;justify-content:center;padding:14px}.receipt{background:#fff;width:100%;padding:8px 0;color:#000}.shop-title{text-align:center;font-size:30px;font-weight:700;margin:12px 0 32px;text-transform:uppercase;overflow-wrap:anywhere}.meta{font-size:20px;line-height:1.35;font-weight:700}.dash{border-top:5px dashed #111;margin:20px 0}.headrow,.itemrow{display:grid;grid-template-columns:minmax(0,2fr) .8fr .7fr 1.25fr 20px;gap:4px;align-items:center}.headrow{font-weight:700;text-align:center;font-size:14px;padding:12px 0 24px}.headrow span:first-child{text-align:center}.itemrow{padding:12px 0;border-bottom:2px dashed #111}.itemrow input{border:0;border-radius:0;padding:5px 1px;font-size:15px;min-width:0;text-align:center;background:transparent}.itemrow input:first-child{text-align:left}.itemrow .amount{font-size:15px;font-weight:700;text-align:right;overflow-wrap:anywhere}.remove{color:#c00;font-size:20px;font-weight:bold;text-align:center;cursor:pointer}.totals{font-size:20px;font-weight:700;line-height:1.5}.grand{display:flex;justify-content:space-between;align-items:center;font-size:clamp(30px,8vw,44px);font-weight:800;margin-top:20px;gap:8px}.thanks{background:#e8e8e8;border-radius:13px;padding:20px 10px;text-align:center;font-weight:700;font-size:clamp(17px,4.5vw,25px);margin-top:24px}.receipt-actions{display:flex;gap:8px;margin-top:12px}.receipt-actions button{flex:1}.hidden{display:none!important}
+@media print{body{background:#fff}.screen{margin:0;padding:0;max-width:none}.no-print,#setupPanel{display:none!important}.panel{box-shadow:none;padding:0;border-radius:0}.receipt{padding:0}.shop-title{font-size:26px;margin:0 0 20px}.meta{font-size:16px}.dash{margin:12px 0}.headrow{padding:8px 0 14px}.itemrow{padding:7px 0}.thanks{margin-top:14px}.receipt-actions{display:none}}
+</style>
+</head>
+<body>
+<main class="screen">
+<section class="panel" id="setupPanel">
+<h1>Create Your Shop Bill Page</h1>
+<p class="muted">Enter the shop owner's name. A shareable website link and QR code will be generated. Each shop uses this same page with its own shop name.</p>
+<label for="shopInput">Shop name / Owner name</label>
+<input id="shopInput" maxlength="70" placeholder="e.g. Sai Charan Gupta Kirana Store" autocomplete="organization">
+<button class="primary full" id="generateBtn">Generate Shop Website + QR</button>
+<div class="generated" id="generated">
+<h3>Your shop website link</h3>
+<div class="url" id="shopUrl"></div>
+<div class="receipt-actions"><a class="button" id="openShop" target="_blank" rel="noopener">Open Website</a><button type="button" id="copyLink">Copy Link</button></div>
+<h3 style="text-align:center;margin-top:22px">Shop QR Code</h3>
+<div class="qr" id="qrCode"></div>
+<button class="full" id="downloadQr">Download QR Code</button>
+<p class="muted">Share the link or QR code with your customers. The link opens this receipt page with your shop name.</p>
+</div>
+</section>
+<section class="panel hidden" id="receiptPanel">
+<div class="receipt" id="receipt">
+<div class="shop-title" id="shopTitle">YOUR SHOP</div>
+<div class="meta">DATE: <span id="date"></span><br>TIME: <span id="time"></span></div>
+<div class="dash"></div>
+<div class="headrow"><span>ITEM</span><span>RATE</span><span>QTY</span><span>AMOUNT</span><span></span></div>
+<div class="dash" style="margin-top:0"></div>
+<div id="items"></div>
+<div class="dash"></div>
+<div class="totals">TOTAL ITEM(S): <span id="itemCount">0</span><br>/QTY: <span id="qtyCount">0</span></div>
+<div class="dash"></div>
+<div class="grand"><span>TOTAL:</span><span id="grandTotal">0.00</span></div>
+<div class="thanks">THANK YOU FOR VISITING</div>
+</div>
+<div class="receipt-actions no-print"><button class="primary" id="addItem">+ Add Item</button><button id="printBill">Print Bill</button></div>
+<p class="muted no-print">Tip: Enter item name, rate, and quantity. Amount and total calculate automatically.</p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const requestedShop=params.get('shop');
+let rows=[];
+function safeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function makeShopUrl(name){const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('shop',name.trim());return u.href;}
+function generate(){
+ const name=$('shopInput').value.trim();
+ if(!name){alert('Please enter a shop name.');$('shopInput').focus();return;}
+ const url=makeShopUrl(name);
+ $('shopUrl').textContent=url;$('openShop').href=url;$('generated').style.display='block';
+ $('qrCode').innerHTML='';
+ if(typeof QRCode==='undefined'){$('qrCode').textContent='QR library could not load. Please check your internet connection.';}
+ else new QRCode($('qrCode'),{text:url,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+}
+$('generateBtn').addEventListener('click',generate);
+$('copyLink').addEventListener('click',async()=>{const text=$('shopUrl').textContent;try{await navigator.clipboard.writeText(text);$('copyLink').textContent='Copied!';}catch(e){prompt('Copy your shop link:',text);}});
+$('downloadQr').addEventListener('click',()=>{const canvas=$('qrCode').querySelector('canvas');const img=$('qrCode').querySelector('img');const data=canvas?canvas.toDataURL('image/png'):img?.src;if(!data){alert('Generate the QR code first.');return;}const a=document.createElement('a');a.href=data;a.download=( $('shopInput').value.trim().replace(/[^a-z0-9]+/gi,'-')||'shop')+'-qr.png';a.click();});
+function updateClock(){const d=new Date();$('date').textContent=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();$('time').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function addRow(name='',rate='',qty=''){
+ const id=Date.now()+Math.random();rows.push({id,name,rate,qty});
+ const row=document.createElement('div');row.className='itemrow';row.dataset.id=id;
+ row.innerHTML='<input aria-label="Item name" placeholder="Item name" value="'+safeText(name)+'"><input aria-label="Rate" type="number" min="0" step="0.01" placeholder="0" value="'+safeText(rate)+'"><input aria-label="Quantity" type="number" min="0" step="1" placeholder="0" value="'+safeText(qty)+'"><span class="amount">0.00</span><span class="remove" role="button" tabindex="0" aria-label="Remove item">×</span>';
+ row.querySelectorAll('input').forEach(input=>input.addEventListener('input',calculate));
+ row.querySelector('.remove').addEventListener('click',()=>{rows=rows.filter(x=>x.id!==id);row.remove();calculate();});
+ row.querySelector('.remove').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();row.querySelector('.remove').click();}});
+ $('items').appendChild(row);calculate();
+}
+function calculate(){let total=0,qtyTotal=0,count=0;
+ document.querySelectorAll('.itemrow').forEach(row=>{const inputs=row.querySelectorAll('input');const rate=Number(inputs[1].value)||0,qty=Number(inputs[2].value)||0;const amount=rate*qty;row.querySelector('.amount').textContent=amount.toFixed(2);total+=amount;if(inputs[0].value.trim()||rate||qty)count++;qtyTotal+=qty;});
+ $('itemCount').textContent=count;$('qtyCount').textContent=qtyTotal;$('grandTotal').textContent=total.toFixed(2);
+}
+$('addItem').addEventListener('click',()=>addRow());
+$('printBill').addEventListener('click',()=>window.print());
+updateClock();setInterval(updateClock,15000);
+if(requestedShop){
+ const shop=requestedShop.trim()||'YOUR SHOP';document.title=shop+' | Shop Bill';$('shopTitle').textContent=shop.toUpperCase();$('setupPanel').classList.add('hidden');$('receiptPanel').classList.remove('hidden');addRow();
+}else{
+ $('shopInput').value='';
+}
+</script>
+</body>
+</html>
