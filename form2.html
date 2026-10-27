@@ -71,7 +71,7 @@
 <div class="totals">TOTAL ITEM(S): <span id="finalItemCount">0</span><br>/QTY: <span id="finalQtyCount">0</span></div>
 <div class="dash"></div>
 <div class="grand"><span>TOTAL:</span><span id="finalGrandTotal">0.00</span></div>
-<button type="button" class="thanks" id="newBillBtn">THANK YOU FOR VISITING<span class="new-bill-hint">Tap here to create a new bill</span></button>
+<button type="button" class="thanks" id="newBillBtn">THANK YOU FOR VISITING<span class="new-bill-hint">Tap here to create a new bill</span></button><button type="button" class="primary full" id="shareBillBtn">Share Final Bill with Customer</button>
 </div>
 </section>
 </main>
@@ -131,6 +131,12 @@ $('proceedBtn').addEventListener('click',()=>{
  $('finalShopTitle').textContent=$('editorShopTitle').textContent;$('finalBillId').textContent=billId;$('finalDate').textContent=billDate;$('finalTime').textContent=billTime;buildRows('finalItems',items);
  $('finalItemCount').textContent=stats.count;$('finalQtyCount').textContent=stats.qty;$('finalGrandTotal').textContent=money(stats.total);
  $('overviewPanel').classList.add('hidden');$('editorPanel').classList.add('hidden');$('finalPanel').classList.remove('hidden');locked=true;window.scrollTo(0,0);
+});
+$('shareBillBtn').addEventListener('click',async()=>{
+ const shop=$('finalShopTitle').textContent;
+ const lines=[shop,'BILL ID: '+$('finalBillId').textContent,'DATE: '+$('finalDate').textContent+'  TIME: '+$('finalTime').textContent,'--------------------------------',...([...$('finalItems').children].map(row=>{const c=row.children;return c[0].textContent+' | Rate: '+c[1].textContent+' | Qty: '+c[2].textContent+' | Amount: ₹'+c[3].textContent;})),'--------------------------------','TOTAL ITEMS: '+$('finalItemCount').textContent,'TOTAL QTY: '+$('finalQtyCount').textContent,'GRAND TOTAL: ₹'+$('finalGrandTotal').textContent,'THANK YOU FOR VISITING'].join('\n');
+ const shareData={title:shop+' Bill',text:lines};
+ try{if(navigator.share)await navigator.share(shareData);else if(navigator.clipboard){await navigator.clipboard.writeText(lines);alert('Bill details copied. Paste them into WhatsApp or your customer chat.');}else{prompt('Copy final bill details:',lines);}}catch(e){if(e.name!=='AbortError')alert('Could not open sharing. Please try again.');}
 });
 function startShop(name){
  document.title=name+' | Shop Bill';$('editorShopTitle').textContent=name.toUpperCase();$('setupPanel').classList.add('hidden');$('editorPanel').classList.remove('hidden');setEditorClock();addRow();
