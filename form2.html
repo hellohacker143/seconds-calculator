@@ -133,10 +133,10 @@ $('proceedBtn').addEventListener('click',()=>{
  $('overviewPanel').classList.add('hidden');$('editorPanel').classList.add('hidden');$('finalPanel').classList.remove('hidden');locked=true;window.scrollTo(0,0);
 });
 $('shareBillBtn').addEventListener('click',async()=>{
- const shop=$('finalShopTitle').textContent;
- const lines=[shop,'BILL ID: '+$('finalBillId').textContent,'DATE: '+$('finalDate').textContent+'  TIME: '+$('finalTime').textContent,'--------------------------------',...([...$('finalItems').children].map(row=>{const c=row.children;return c[0].textContent+' | Rate: '+c[1].textContent+' | Qty: '+c[2].textContent+' | Amount: ₹'+c[3].textContent;})),'--------------------------------','TOTAL ITEMS: '+$('finalItemCount').textContent,'TOTAL QTY: '+$('finalQtyCount').textContent,'GRAND TOTAL: ₹'+$('finalGrandTotal').textContent,'THANK YOU FOR VISITING'].join('\n');
- const shareData={title:shop+' Bill',text:lines};
- try{if(navigator.share)await navigator.share(shareData);else if(navigator.clipboard){await navigator.clipboard.writeText(lines);alert('Bill details copied. Paste them into WhatsApp or your customer chat.');}else{prompt('Copy final bill details:',lines);}}catch(e){if(e.name!=='AbortError')alert('Could not open sharing. Please try again.');}
+ const data={shop:$('finalShopTitle').textContent,billId:$('finalBillId').textContent,date:$('finalDate').textContent,time:$('finalTime').textContent,items:[...$('finalItems').children].map(row=>{const c=row.children;return {name:c[0].textContent,rate:c[1].textContent,qty:c[2].textContent,amount:c[3].textContent};}),itemCount:$('finalItemCount').textContent,qtyCount:$('finalQtyCount').textContent,total:$('finalGrandTotal').textContent};
+ const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(data))));const shareUrl=location.origin+location.pathname+location.search+'#bill='+encoded;
+ const shareData={title:data.shop+' Bill',text:'Your bill from '+data.shop, url:shareUrl};
+ try{if(navigator.share)await navigator.share(shareData);else if(navigator.clipboard){await navigator.clipboard.writeText(shareUrl);alert('Final bill link copied. Send this link to your customer.');}else{prompt('Copy final bill link:',shareUrl);}}catch(e){if(e.name!=='AbortError')alert('Could not open sharing. Please try again.');}
 });
 function startShop(name){
  document.title=name+' | Shop Bill';$('editorShopTitle').textContent=name.toUpperCase();$('setupPanel').classList.add('hidden');$('editorPanel').classList.remove('hidden');setEditorClock();addRow();
@@ -145,7 +145,17 @@ $('newBillBtn').addEventListener('click',()=>{
  $('finalPanel').classList.add('hidden');$('overviewPanel').classList.add('hidden');$('editorPanel').classList.remove('hidden');
  $('items').innerHTML='';billId='';billDate='';billTime='';locked=false;setEditorClock();addRow();window.scrollTo(0,0);
 });
+function openSharedBill(){
+ const match=location.hash.match(/^#bill=(.+)$/);if(!match)return;
+ try{const data=JSON.parse(decodeURIComponent(escape(atob(match[1]))));if(!data||!Array.isArray(data.items))return;
+ $('setupPanel').classList.add('hidden');$('editorPanel').classList.add('hidden');$('overviewPanel').classList.add('hidden');$('finalPanel').classList.remove('hidden');
+ $('finalShopTitle').textContent=data.shop||requestedShop||'SHOP';$('finalBillId').textContent=data.billId||'';$('finalDate').textContent=data.date||'';$('finalTime').textContent=data.time||'';
+ buildRows('finalItems',data.items.map(x=>({name:x.name,rate:x.rate,qty:x.qty})));$('finalItemCount').textContent=data.itemCount||data.items.length;$('finalQtyCount').textContent=data.qtyCount||data.items.reduce((n,x)=>n+(Number(x.qty)||0),0);$('finalGrandTotal').textContent=data.total||money(data.items.reduce((n,x)=>n+(Number(x.rate)||0)*(Number(x.qty)||0),0));
+ const newBtn=$('newBillBtn');if(newBtn)newBtn.classList.add('hidden');const shareBtn=$('shareBillBtn');if(shareBtn)shareBtn.classList.add('hidden');document.title=($('finalShopTitle').textContent)+' | Customer Bill';
+ }catch(e){console.error('Invalid shared bill link',e);}
+}
 if(requestedShop)startShop(requestedShop);
+openSharedBill();
 </script>
 </body>
 </html>
